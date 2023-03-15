@@ -7,10 +7,10 @@ int main(int argc, char *argv[])
 {
 	printf("Welcome to Gavial VM!\n");
 	if (!init_vm()) {
-		return 1;
+		return EXIT_FAILURE;
 	}
 	instruction(OP_RETURN);
 	disassemble();
 	close_vm();
-	return 0;
+	return EXIT_SUCCESS;
 }
