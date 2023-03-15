@@ -1,12 +1,12 @@
-#include <stdio.h>
 #include <stdlib.h>
 
+#include "common.h"
 #include "debug.h"
 #include "vm.h"
 
 int main(int argc, char *argv[])
 {
-	printf("Welcome to Gavial VM!\n");
+	gvm_log("Welcome to Gavial VM!\n");
 	if (!init_vm()) {
 		return EXIT_FAILURE;
 	}

@@ -8,7 +8,7 @@ extern size_t instruction_count;
 
 void disassemble_instruction(uint8_t byte)
 {
-	printf("%2x\n", byte);
+	gvm_log("%2x\n", byte);
 }
 
 void disassemble()
