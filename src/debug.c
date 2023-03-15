@@ -3,10 +3,11 @@
 #include "common.h"
 #include "debug.h"
 
+// Declare 'private' VM components so we don't have to expose them to non-debug code
 extern uint8_t *instructions;
 extern size_t instruction_count;
 
-void disassemble_instruction(uint8_t byte)
+static void disassemble_instruction(uint8_t byte)
 {
 	gvm_log("%2x\n", byte);
 }

@@ -44,7 +44,7 @@ bool instruction(uint8_t byte)
 }
 
 // Return value: true if should quit
-bool run_chunk()
+static bool run_chunk()
 {
 	for (int i = 0; i < instruction_count; ++i) {
 		switch (instructions[i]) {
@@ -58,7 +58,7 @@ bool run_chunk()
 }
 
 // Return seconds since some arbitrary point
-double time_seconds()
+static double time_seconds()
 {
 	struct timespec now;
 	clock_gettime(CLOCK_MONOTONIC, &now);
@@ -68,7 +68,7 @@ double time_seconds()
 }
 
 // Returns control after 'duration' seconds
-void delay(double duration)
+static void delay(double duration)
 {
 	if (duration <= 0) {
 		return;
