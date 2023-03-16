@@ -59,6 +59,17 @@ bool instruction(uint8_t byte)
 	return true;
 }
 
+static void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+	switch (key) {
+		case GLFW_KEY_ESCAPE:
+			glfwSetWindowShouldClose(window, GLFW_TRUE);
+			break;
+		default:
+			break;
+	}
+}
+
 // Return value: true if should quit
 static bool run_chunk()
 {
@@ -96,6 +107,7 @@ bool run_vm()
 	glfwMakeContextCurrent(window); // TODO: error checking
 	gladLoadGL(glfwGetProcAddress);
 	glfwSwapInterval(1);
+	glfwSetKeyCallback(window, glfw_key_callback);
 
 	bool loop_done = false;
 
