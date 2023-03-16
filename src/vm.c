@@ -1,4 +1,4 @@
-#define _POSIX_C_SOURCE 200809L // clock_gettime() and related definitions
+#define _POSIX_C_SOURCE 200809L // nanosleep() and related definitions
 
 #include <stdlib.h>
 #include <time.h>
@@ -84,16 +84,17 @@ static void render()
 	glfwSwapBuffers(window);
 }
 
-// Returns control after 'duration' seconds
-static void delay(double duration)
+// Returns control after the target timestamp
+static void delay_until(double target)
 {
-	if (duration <= 0) {
-		return;
-	}
-
-	double target = glfwGetTime() + duration;
-	while (glfwGetTime() < target) {
-		// TODO: Evil and bad, improve
+	double now = glfwGetTime();
+	while (now < target) { // if not, exit immediately without a system call
+		double duration = target - now;
+		struct timespec duration_ts;
+		duration_ts.tv_sec = duration;
+		duration_ts.tv_nsec = (duration - duration_ts.tv_sec) * 1000000000.0;
+		nanosleep(&duration_ts, NULL);
+		now = glfwGetTime();
 	}
 }
 
@@ -121,7 +122,7 @@ bool run_vm()
 		loop_done = run_chunk();
 		render();
 		glfwPollEvents();
-		delay(next_frame - glfwGetTime());
+		delay_until(next_frame);
 	}
 
 	close_vm();
