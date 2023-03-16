@@ -3,8 +3,8 @@ BUILD_DIR := build
 OBJ_DIR = $(BUILD_DIR)/objects
 EXE = $(BUILD_DIR)/gavial
 
-LINK_FLAGS := -Wall
-COMPILE_FLAGS := -Wall -c
+LINK_FLAGS := -Wall `pkg-config --static --libs deps/glfw3.pc`
+COMPILE_FLAGS := -Wall -c `pkg-config --cflags deps/glfw3.pc`
 
 SOURCES := $(wildcard $(SOURCE_DIR)/*.c)
 HEADERS := $(wildcard $(SOURCE_DIR)/*.h)

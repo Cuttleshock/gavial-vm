@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include <GLFW/glfw3.h>
+
 #include "vm.h"
 #include "memory.h"
 
@@ -22,11 +24,16 @@ bool init_vm()
 		return false;
 	}
 
+	if (!glfwInit()) {
+		return false;
+	}
+
 	return true;
 }
 
 void close_vm()
 {
+	glfwTerminate();
 	gvm_free(instructions);
 }
 
