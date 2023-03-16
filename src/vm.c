@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "../deps/glad_gl.h"
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 #include "vm.h"
@@ -15,6 +17,13 @@ uint8_t *instructions;
 size_t instruction_capacity;
 size_t instruction_count;
 
+static GLFWwindow *window = NULL;
+
+static void glfw_error_callback(int error, const char *message)
+{
+	gvm_error("GLFW E%4d: %s\n", error, message);
+}
+
 bool init_vm()
 {
 	instructions = gvm_malloc(INSTRUCTIONS_INITIAL_SIZE);
@@ -24,6 +33,7 @@ bool init_vm()
 		return false;
 	}
 
+	glfwSetErrorCallback(glfw_error_callback);
 	if (!glfwInit()) {
 		return false;
 	}
@@ -31,8 +41,11 @@ bool init_vm()
 	return true;
 }
 
-void close_vm()
+static void close_vm()
 {
+	if (window != NULL) {
+		glfwDestroyWindow(window);
+	}
 	glfwTerminate();
 	gvm_free(instructions);
 }
@@ -56,12 +69,19 @@ static bool run_chunk()
 	for (int i = 0; i < instruction_count; ++i) {
 		switch (instructions[i]) {
 			case OP_RETURN:
-				return true;
+				return false;
 			default:
 				return true;
 		}
 	}
 	return false;
+}
+
+static void render()
+{
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glfwSwapBuffers(window);
 }
 
 // Return seconds since some arbitrary point
@@ -87,13 +107,33 @@ static void delay(double duration)
 	}
 }
 
-void run_vm()
+// Return value: false if an error occurred preventing execution
+bool run_vm()
 {
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	window = glfwCreateWindow(512, 512, "Gavial VM", NULL, NULL);
+	if (!window) {
+		close_vm();
+		return false;
+	}
+	glfwMakeContextCurrent(window); // TODO: error checking
+	gladLoadGL(glfwGetProcAddress);
+	glfwSwapInterval(1);
+
 	bool loop_done = false;
 
-	while (!loop_done) {
+	while (!loop_done && !glfwWindowShouldClose(window)) {
 		double next_frame = time_seconds() + FRAME_LENGTH;
 		loop_done = run_chunk();
+		render();
+		glfwPollEvents();
 		delay(next_frame - time_seconds());
 	}
+
+	close_vm();
+	return true;
 }

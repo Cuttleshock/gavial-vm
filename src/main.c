@@ -12,7 +12,9 @@ int main(int argc, char *argv[])
 	}
 	instruction(OP_RETURN);
 	disassemble();
-	run_vm();
-	close_vm();
-	return EXIT_SUCCESS;
+	if (run_vm()) {
+		return EXIT_SUCCESS;
+	} else {
+		return EXIT_FAILURE;
+	}
 }
