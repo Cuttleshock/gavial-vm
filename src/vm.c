@@ -84,16 +84,6 @@ static void render()
 	glfwSwapBuffers(window);
 }
 
-// Return seconds since some arbitrary point
-static double time_seconds()
-{
-	struct timespec now;
-	clock_gettime(CLOCK_MONOTONIC, &now);
-	double secs = (double)now.tv_sec;
-	double nsecs = (double)now.tv_nsec;
-	return secs + nsecs / 1000000000.0;
-}
-
 // Returns control after 'duration' seconds
 static void delay(double duration)
 {
@@ -101,8 +91,8 @@ static void delay(double duration)
 		return;
 	}
 
-	double target = time_seconds() + duration;
-	while (time_seconds() < target) {
+	double target = glfwGetTime() + duration;
+	while (glfwGetTime() < target) {
 		// TODO: Evil and bad, improve
 	}
 }
@@ -127,11 +117,11 @@ bool run_vm()
 	bool loop_done = false;
 
 	while (!loop_done && !glfwWindowShouldClose(window)) {
-		double next_frame = time_seconds() + FRAME_LENGTH;
+		double next_frame = glfwGetTime() + FRAME_LENGTH;
 		loop_done = run_chunk();
 		render();
 		glfwPollEvents();
-		delay(next_frame - time_seconds());
+		delay(next_frame - glfwGetTime());
 	}
 
 	close_vm();
