@@ -9,9 +9,7 @@
 
 #define INSTRUCTIONS_INITIAL_SIZE 256
 
-uint8_t *instructions;
-size_t instruction_capacity;
-size_t instruction_count;
+struct VM vm;
 
 static GLFWwindow *window = NULL;
 
@@ -22,10 +20,10 @@ static void glfw_error_callback(int error, const char *message)
 
 bool init_vm()
 {
-	instructions = gvm_malloc(INSTRUCTIONS_INITIAL_SIZE);
-	instruction_capacity = INSTRUCTIONS_INITIAL_SIZE;
-	instruction_count = 0;
-	if (!instructions) {
+	vm.instructions = gvm_malloc(INSTRUCTIONS_INITIAL_SIZE);
+	vm.capacity = INSTRUCTIONS_INITIAL_SIZE;
+	vm.count = 0;
+	if (!vm.instructions) {
 		return false;
 	}
 
@@ -43,19 +41,19 @@ static void close_vm()
 		glfwDestroyWindow(window);
 	}
 	glfwTerminate();
-	gvm_free(instructions);
+	gvm_free(vm.instructions);
 }
 
 bool instruction(uint8_t byte)
 {
-	if (instruction_count >= instruction_capacity) {
-		instructions = gvm_realloc(instructions, instruction_capacity, 2 * instruction_capacity);
-		if (!instructions) {
+	if (vm.count >= vm.capacity) {
+		vm.instructions = gvm_realloc(vm.instructions, vm.capacity, 2 * vm.capacity);
+		if (!vm.instructions) {
 			return false;
 		}
 	}
 
-	instructions[instruction_count++] = byte;
+	vm.instructions[vm.count++] = byte;
 	return true;
 }
 
@@ -73,8 +71,8 @@ static void glfw_key_callback(GLFWwindow *window, int key, int scancode, int act
 // Return value: true if should quit
 static bool run_chunk()
 {
-	for (int i = 0; i < instruction_count; ++i) {
-		switch (instructions[i]) {
+	for (int i = 0; i < vm.count; ++i) {
+		switch (vm.instructions[i]) {
 			case OP_RETURN:
 				return false;
 			default:
