@@ -73,9 +73,26 @@ static bool run_chunk()
 {
 	for (int i = 0; i < vm.count; ++i) {
 		switch (vm.instructions[i]) {
+			case OP_SET:
+			case OP_GET:
+			case OP_LOAD_CONST:
+			case OP_ADD:
+			case OP_SUBTRACT:
+			case OP_GET_X:
+			case OP_GET_Y:
+			case OP_IF:
+			case OP_LESS_THAN:
+			case OP_GREATER_THAN:
+			case OP_LOAD_PAL:
+			case OP_CLEAR_SCREEN:
+			case OP_FILL_RECT:
+			case OP_SWAP:
+			case OP_DUP:
+			case OP_POP:
 			case OP_RETURN:
 				return false;
-			default:
+			default: // Unreachable if our parser works correctly
+				gvm_error("Unexpected opcode %2x\n", vm.instructions[i]);
 				return true;
 		}
 	}

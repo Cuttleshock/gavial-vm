@@ -29,7 +29,7 @@ typedef enum {
 	OP_DUP,
 	OP_POP,
 	OP_RETURN,
-};
+} OpCode;
 
 struct VM {
 	uint8_t *instructions;
