@@ -1,22 +1,12 @@
 #include <stdlib.h>
 
-#include "../deps/glad_gl.h"
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
-
 #include "vm.h"
 #include "memory.h"
+#include "subsystems.h"
 
 #define INSTRUCTIONS_INITIAL_SIZE 256
 
 struct VM vm;
-
-static GLFWwindow *window = NULL;
-
-static void glfw_error_callback(int error, const char *message)
-{
-	gvm_error("GLFW E%4d: %s\n", error, message);
-}
 
 bool init_vm()
 {
@@ -27,8 +17,8 @@ bool init_vm()
 		return false;
 	}
 
-	glfwSetErrorCallback(glfw_error_callback);
-	if (!glfwInit()) {
+	if (!init_subsystems()) {
+		gvm_free(vm.instructions);
 		return false;
 	}
 
@@ -37,10 +27,6 @@ bool init_vm()
 
 static void close_vm()
 {
-	if (window != NULL) {
-		glfwDestroyWindow(window);
-	}
-	glfwTerminate();
 	gvm_free(vm.instructions);
 }
 
@@ -57,19 +43,8 @@ bool instruction(uint8_t byte)
 	return true;
 }
 
-static void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
-{
-	switch (key) {
-		case GLFW_KEY_ESCAPE:
-			glfwSetWindowShouldClose(window, GLFW_TRUE);
-			break;
-		default:
-			break;
-	}
-}
-
 // Return value: true if should quit
-static bool run_chunk()
+static bool update()
 {
 	for (int i = 0; i < vm.count; ++i) {
 		switch (vm.instructions[i]) {
@@ -99,40 +74,17 @@ static bool run_chunk()
 	return false;
 }
 
-static void render()
-{
-	glClearColor(0.0, 0.0, 0.0, 0.0);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glfwSwapBuffers(window);
-}
-
 // Return value: false if an error occurred preventing execution
 bool run_vm()
 {
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-	window = glfwCreateWindow(512, 512, "Gavial VM", NULL, NULL);
-	if (!window) {
-		close_vm();
-		return false;
-	}
-	glfwMakeContextCurrent(window); // TODO: error checking
-	gladLoadGL(glfwGetProcAddress);
-	glfwSwapInterval(1);
-	glfwSetKeyCallback(window, glfw_key_callback);
-
 	bool loop_done = false;
 
-	while (!loop_done && !glfwWindowShouldClose(window)) {
-		// TODO: Unlink vsync from update logic
-		loop_done = run_chunk();
-		render();
-		glfwPollEvents();
+	while (!loop_done) {
+		loop_done = update();
+		loop_done = loop_done || run_subsystems();
 	}
 
 	close_vm();
+	close_subsystems();
 	return true;
 }
