@@ -39,11 +39,6 @@ typedef struct {
 	GvmValType type;
 } GvmState;
 
-typedef struct {
-	GvmLiteral as;
-	GvmValType type;
-} GvmConstant;
-
 struct VM {
 	uint8_t *instructions;
 	size_t capacity;
@@ -54,6 +49,7 @@ struct VM {
 	size_t stack_count;
 	GvmConstant constants[256];
 	size_t constants_count;
+	bool had_error;
 };
 
 bool init_vm();

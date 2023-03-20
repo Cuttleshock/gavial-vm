@@ -100,35 +100,143 @@ bool instruction(uint8_t byte)
 	return true;
 }
 
+static void runtime_error(const char *message)
+{
+	if (!vm.had_error) {
+		gvm_error("%s\n", message);
+		vm.had_error = true;
+	}
+}
+
+static GvmConstant peek()
+{
+	if (vm.stack_count <= 0) {
+		runtime_error("Stack underflow");
+		return vm.stack[0];
+	}
+
+	return vm.stack[vm.stack_count - 1];
+}
+
+static GvmConstant pop()
+{
+	if (vm.stack_count <= 0) {
+		runtime_error("Stack underflow");
+		return vm.stack[0];
+	}
+
+	return vm.stack[--vm.stack_count];
+}
+
+static void modify(GvmConstant val)
+{
+	if (vm.stack_count <= 0) {
+		runtime_error("Stack underflow");
+		return;
+	}
+
+	vm.stack[vm.stack_count - 1] = val;
+}
+
+static void push(GvmConstant val)
+{
+	if (vm.stack_count >= 256) {
+		runtime_error("Stack overflow");
+		return;
+	}
+
+	vm.stack[vm.stack_count++] = val;
+}
+
 // Return value: true if should quit
 static bool update()
 {
 	for (int i = 0; i < vm.count; ++i) {
 		switch (vm.instructions[i]) {
-			case OP_SET:
-			case OP_GET:
-			case OP_LOAD_CONST:
-			case OP_ADD:
-			case OP_SUBTRACT:
+			case OP_SET: {
+				uint8_t index = vm.instructions[++i];
+				GvmConstant val = pop();
+				vm.state[index].current = val.as;
+				break;
+			}
+			case OP_GET: {
+				uint8_t index = vm.instructions[++i];
+				push((GvmConstant){ vm.state[index].current, vm.state[index].type });
+				break;
+			}
+			case OP_LOAD_CONST: {
+				uint8_t index = vm.instructions[++i];
+				push(vm.constants[index]);
+				break;
+			}
+			case OP_ADD: {
+				GvmConstant b = pop();
+				GvmConstant a = peek();
+				GvmConstant result = add_vals(a, b);
+				modify(result);
+				break;
+			}
+			case OP_SUBTRACT: {
+				GvmConstant b = pop();
+				GvmConstant a = peek();
+				GvmConstant result = subtract_vals(a, b);
+				modify(result);
+				break;
+			}
 			case OP_GET_X:
+				modify(SCAL(peek().as.vec2[0]));
+				break;
 			case OP_GET_Y:
-			case OP_IF:
-			case OP_LESS_THAN:
-			case OP_GREATER_THAN:
-			case OP_LOAD_PAL:
-			case OP_CLEAR_SCREEN:
-			case OP_FILL_RECT:
-			case OP_SWAP:
+				modify(SCAL(peek().as.vec2[1]));
+				break;
+			case OP_IF: { // TODO
+				return true;
+			}
+			case OP_LESS_THAN: {
+				GvmConstant b = pop();
+				GvmConstant a = peek();
+				GvmConstant result = val_less_than(a, b);
+				modify(result);
+				break;
+			}
+			case OP_GREATER_THAN: {
+				GvmConstant b = pop();
+				GvmConstant a = peek();
+				GvmConstant result = val_greater_than(a, b);
+				modify(result);
+				break;
+			}
+			case OP_LOAD_PAL: { // TODO
+				return true;
+			}
+			case OP_CLEAR_SCREEN: { // TODO
+				return true;
+			}
+			case OP_FILL_RECT: { // TODO
+				return true;
+			}
+			case OP_SWAP: {
+				GvmConstant b = pop();
+				GvmConstant a = peek();
+				modify(b);
+				push(a);
+				break;
+			}
 			case OP_DUP:
+				push(peek());
+				break;
 			case OP_POP:
+				pop();
+				break;
 			case OP_RETURN:
-				return false;
+				break;
 			default: // Unreachable if our parser works correctly
-				gvm_error("Unexpected opcode %2x\n", vm.instructions[i]);
+				runtime_error("Unexpected opcode");
 				return true;
 		}
 	}
-	return false;
+
+	return vm.had_error;
 }
 
 // Return value: false if an error occurred preventing execution
