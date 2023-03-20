@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "debug.h"
+#include "parser.h"
 #include "vm.h"
 
 int main(int argc, char *argv[])
@@ -11,15 +12,9 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	instruction(OP_LOAD_CONST);
-	instruction(0);
-	instruction(OP_LOAD_CONST);
-	instruction(1);
-	instruction(OP_ADD);
-	instruction(OP_CLEAR_SCREEN);
-	instruction(2);
-	instruction(3);
-	instruction(OP_RETURN);
+	if (!parse()) {
+		return EXIT_FAILURE;
+	}
 
 	disassemble();
 	if (run_vm()) {
