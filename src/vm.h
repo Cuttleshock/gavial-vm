@@ -2,6 +2,7 @@
 #define VM_H
 
 #include "common.h"
+#include "value.h"
 
 typedef enum {
 	// State
@@ -31,14 +32,34 @@ typedef enum {
 	OP_RETURN,
 } OpCode;
 
+typedef struct {
+	const char *name;
+	GvmLiteral init;
+	GvmLiteral current;
+	GvmValType type;
+} GvmState;
+
+typedef struct {
+	GvmLiteral as;
+	GvmValType type;
+} GvmConstant;
+
 struct VM {
 	uint8_t *instructions;
 	size_t capacity;
 	size_t count;
+	GvmState state[256];
+	size_t state_count;
+	GvmConstant stack[256];
+	size_t stack_count;
+	GvmConstant constants[256];
+	size_t constants_count;
 };
 
 bool init_vm();
 bool instruction(uint8_t byte);
 bool run_vm();
+bool insert_state(GvmState item, int length);
+GvmState *get_state(const char *name, int length);
 
 #endif // VM_H

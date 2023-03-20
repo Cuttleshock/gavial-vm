@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "vm.h"
 #include "memory.h"
@@ -28,6 +29,62 @@ bool init_vm()
 static void close_vm()
 {
 	gvm_free(vm.instructions);
+}
+
+// Binary search for a named variable in VM's state list
+// If not found, index is where it should be inserted to maintain order
+static struct location {
+	bool found;
+	int index;
+} locate_state(const char *name, int length)
+{
+	int low = 0;
+	int high = vm.state_count - 1;
+	int current = low + high / 2;
+	for (; low <= high; current = (low + high) / 2) {
+		int cmp = strncmp(name, vm.state[current].name, length);
+		if (cmp < 0) {
+			high = current - 1;
+		} else if (cmp > 0) {
+			low = current + 1;
+		} else {
+			return (struct location){ true, current };
+		}
+	}
+	return (struct location){ false, low };
+}
+
+// Insert variable in state list, keeping it sorted by name
+// Returns true on successful insertion
+bool insert_state(GvmState item, int length)
+{
+	if (vm.state_count >= 256) {
+		return false;
+	}
+
+	struct location loc = locate_state(item.name, length);
+	if (loc.found) {
+		return false;
+	}
+
+	// Move all items one to the right
+	for (int i = vm.state_count; i > loc.index; --i) {
+		vm.state[i] = vm.state[i - 1];
+	}
+	vm.state[loc.index] = item;
+	++vm.state_count;
+	return true;
+}
+
+// Binary search for a named variable in VM's state list
+GvmState *get_state(const char *name, int length)
+{
+	struct location loc = locate_state(name, length);
+	if (loc.found) {
+		return &vm.state[loc.index];
+	} else {
+		return NULL;
+	}
 }
 
 bool instruction(uint8_t byte)
