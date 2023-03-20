@@ -7,6 +7,24 @@
 // Declare 'private' VM components so we don't have to expose them to non-debug code
 extern struct VM vm;
 
+static void print_value(GvmLiteral literal, GvmValType type)
+{
+	switch (type) {
+		case VAL_SCALAR:
+			printf("%d", literal.scalar);
+			return;
+		case VAL_VEC2:
+			printf("(%d, %d)", literal.vec2[0], literal.vec2[1]);
+			return;
+		case VAL_VEC4:
+			printf("(%d, %d, %d, %d)", literal.vec4[0], literal.vec4[1], literal.vec4[2], literal.vec4[3]);
+			return;
+		default:
+			printf("[%8x of unknown type %d]", literal.scalar, type);
+			return;
+	}
+}
+
 static int disassemble_instruction(int i)
 {
 #define CASE(op) case op: gvm_log(#op "\n"); return ++i;
@@ -46,8 +64,15 @@ static int disassemble_instruction(int i)
 
 void disassemble()
 {
-	int i = 0;
-	while (i < vm.count) {
-		i = disassemble_instruction(i);
+	printf("🐊 State\n");
+	for (int i = 0; i < vm.state_count; ++i) {
+		printf("%s: ", vm.state[i].name);
+		print_value(vm.state[i].init, vm.state[i].type);
+		printf(" -> ");
+		print_value(vm.state[i].current, vm.state[i].type);
+		printf("\n");
 	}
+
+	printf("🐊 Update\n");
+	for (int i = 0; i < vm.count; i = disassemble_instruction(i)) {}
 }
