@@ -238,6 +238,9 @@ static bool update()
 			case OP_POP:
 				pop();
 				break;
+			case OP_PRINT:
+				print_value(pop());
+				break;
 			case OP_RETURN:
 				break;
 			default: // Unreachable if our parser works correctly

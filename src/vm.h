@@ -29,6 +29,7 @@ typedef enum {
 	OP_SWAP,
 	OP_DUP,
 	OP_POP,
+	OP_PRINT,
 	OP_RETURN,
 } OpCode;
 

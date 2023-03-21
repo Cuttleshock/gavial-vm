@@ -7,6 +7,8 @@
 #define VEC2(x, y)       ((GvmConstant){ .as={ .vec2={ (uint16_t)(x), (uint16_t)(y) } }, .type=VAL_VEC2 })
 #define VEC4(x, y, z, w) ((GvmConstant){ .as={ .vec4={ (uint8_t)(x), (uint8_t)(y), (uint8_t)(z), (uint8_t)(w) } }, .type=VAL_VEC4 })
 
+#define CONSTANT(lit, _type) ((GvmConstant){ .as=(lit), .type=(_type) })
+
 typedef enum {
 	VAL_SCALAR,
 	VAL_VEC2,
@@ -28,5 +30,7 @@ GvmConstant add_vals(GvmConstant a, GvmConstant b);
 GvmConstant subtract_vals(GvmConstant a, GvmConstant b);
 GvmConstant val_less_than(GvmConstant a, GvmConstant b);
 GvmConstant val_greater_than(GvmConstant a, GvmConstant b);
+
+void print_value(GvmConstant val);
 
 #endif // VALUE_H

@@ -24,6 +24,7 @@ static bool parse_update()
 	instruction(OP_LOAD_CONST);
 	instruction(1);
 	instruction(OP_ADD);
+	instruction(OP_PRINT);
 	instruction(OP_CLEAR_SCREEN);
 	instruction(2);
 	instruction(3);

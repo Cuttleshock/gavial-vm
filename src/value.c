@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "value.h"
 
 // Adds two values, respecting the type of the first operand
@@ -41,4 +43,22 @@ GvmConstant val_less_than(GvmConstant a, GvmConstant b)
 GvmConstant val_greater_than(GvmConstant a, GvmConstant b)
 {
 	return SCAL(a.as.scalar > b.as.scalar ? 1 : 0);
+}
+
+void print_value(GvmConstant val)
+{
+	switch (val.type) {
+		case VAL_SCALAR:
+			printf("%d", val.as.scalar);
+			return;
+		case VAL_VEC2:
+			printf("(%d, %d)", val.as.vec2[0], val.as.vec2[1]);
+			return;
+		case VAL_VEC4:
+			printf("(%d, %d, %d, %d)", val.as.vec4[0], val.as.vec4[1], val.as.vec4[2], val.as.vec4[3]);
+			return;
+		default:
+			printf("[%8x of unknown type %d]", val.as.scalar, val.type);
+			return;
+	}
 }
