@@ -54,6 +54,7 @@ struct VM {
 
 bool init_vm();
 bool instruction(uint8_t byte);
+bool constant(GvmConstant value);
 bool run_vm();
 bool insert_state(GvmState item, int length);
 GvmState *get_state(const char *name, int length);

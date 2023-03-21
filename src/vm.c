@@ -100,6 +100,16 @@ bool instruction(uint8_t byte)
 	return true;
 }
 
+bool constant(GvmConstant value)
+{
+	if (vm.constants_count >= 256) {
+		return false;
+	}
+
+	vm.constants[vm.constants_count++] = value;
+	return true;
+}
+
 static void runtime_error(const char *message)
 {
 	if (!vm.had_error) {

@@ -17,8 +17,10 @@ static bool parse_state()
 
 static bool parse_update()
 {
+	constant(SCAL(3));
 	instruction(OP_LOAD_CONST);
 	instruction(0);
+	constant(SCAL(5));
 	instruction(OP_LOAD_CONST);
 	instruction(1);
 	instruction(OP_ADD);
