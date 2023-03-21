@@ -7,28 +7,34 @@
 GvmConstant add_vals(GvmConstant a, GvmConstant b)
 {
 	switch (a.type) {
+		case VAL_SCALAR:
+			return SCAL(a.as.scalar + b.as.scalar);
 		case VAL_VEC2:
 			return VEC2(a.as.vec2[0] + b.as.vec2[0], a.as.vec2[1] + b.as.vec2[1]);
 		case VAL_VEC4:
 			return VEC4(a.as.vec4[0] + b.as.vec4[0], a.as.vec4[1] + b.as.vec4[1], a.as.vec4[2] + b.as.vec4[2], a.as.vec4[3] + b.as.vec4[3]);
-		case VAL_SCALAR:
-		default:
-			return SCAL(a.as.scalar + b.as.scalar);
+		case VAL_NONE: // Unreachable
+			return SCAL(0);
 	}
+
+	return SCAL(0); // Extra-unreachable
 }
 
 // Subtracts two values, respecting the type of the first operand
 GvmConstant subtract_vals(GvmConstant a, GvmConstant b)
 {
 	switch (a.type) {
+		case VAL_SCALAR:
+			return SCAL(a.as.scalar - b.as.scalar);
 		case VAL_VEC2:
 			return VEC2(a.as.vec2[0] - b.as.vec2[0], a.as.vec2[1] - b.as.vec2[1]);
 		case VAL_VEC4:
 			return VEC4(a.as.vec4[0] - b.as.vec4[0], a.as.vec4[1] - b.as.vec4[1], a.as.vec4[2] - b.as.vec4[2], a.as.vec4[3] - b.as.vec4[3]);
-		case VAL_SCALAR:
-		default:
-			return SCAL(a.as.scalar - b.as.scalar);
+		case VAL_NONE: // Unreachable
+			return SCAL(0);
 	}
+
+	return SCAL(0); // Extra-unreachable
 }
 
 // Compares two values, treating them as scalars
@@ -57,7 +63,7 @@ void print_value(GvmConstant val)
 		case VAL_VEC4:
 			printf("(%d, %d, %d, %d)", val.as.vec4[0], val.as.vec4[1], val.as.vec4[2], val.as.vec4[3]);
 			return;
-		default:
+		case VAL_NONE: // Unreachable(?)
 			printf("[%8x of unknown type %d]", val.as.scalar, val.type);
 			return;
 	}
