@@ -5,7 +5,7 @@ OBJ_DIR = $(BUILD_DIR)/objects
 EXE = $(BUILD_DIR)/gavial
 
 LINK_FLAGS := -Wall `pkg-config --static --libs $(DEP_DIR)/glfw3.pc`
-COMPILE_FLAGS := -Wall -c `pkg-config --cflags $(DEP_DIR)/glfw3.pc`
+COMPILE_FLAGS := -Wall -c `pkg-config --cflags $(DEP_DIR)/glfw3.pc` -I.
 
 SOURCES := $(wildcard $(SOURCE_DIR)/*.c) $(wildcard $(DEP_DIR)/*.c)
 HEADERS := $(wildcard $(SOURCE_DIR)/*.h) $(wildcard $(DEP_DIR)/*.h)
