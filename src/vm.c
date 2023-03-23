@@ -3,7 +3,7 @@
 
 #include "vm.h"
 #include "memory.h"
-#include "subsystems.h"
+#include "subsystems/subsystems.h"
 
 #define INSTRUCTIONS_INITIAL_SIZE 256
 
