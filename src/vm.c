@@ -240,6 +240,7 @@ static bool update()
 				break;
 			case OP_PRINT:
 				print_value(pop());
+				gvm_log("\n");
 				break;
 			case OP_RETURN:
 				break;
