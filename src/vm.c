@@ -259,8 +259,10 @@ bool run_vm()
 	bool loop_done = false;
 
 	while (!loop_done) {
+		input();
 		loop_done = update();
-		loop_done = loop_done || run_subsystems();
+		draw(); // TODO: Unlink vsync from update logic
+		loop_done = loop_done || window_should_close();
 	}
 
 	close_vm();
