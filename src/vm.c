@@ -161,6 +161,8 @@ static void push(GvmConstant val)
 // Return value: true if should quit
 static bool update()
 {
+	vm.stack_count = 0;
+
 	for (int i = 0; i < vm.count; ++i) {
 		switch (vm.instructions[i]) {
 			case OP_SET: {
