@@ -8,14 +8,23 @@
 // -1.0, 1.0,
 // 1.0, -1.0,
 
-in mediump vec4 color;
+in vec2 position;
+in vec2 scale;
+in int palette;
+in int colour;
 
-out mediump vec4 frag_color;
+layout (std140) uniform Palettes
+{
+	vec4 palettes[16];
+};
+
+out vec4 frag_color;
 
 void main()
 {
-	float x = 1.0 - 2.0 * float(((gl_VertexID + 1) / 3) % 2);
-	float y = 1.0 - 2.0 * float(gl_VertexID % 2);
+	float x = position.x + (1.0 - 2.0 * float(((gl_VertexID + 1) / 3) % 2)) * scale.x;
+	float y = position.y + (1.0 - 2.0 * float(gl_VertexID % 2)) * scale.y;
 	gl_Position = vec4(x, y, 0.0, 1.0);
-	frag_color = color;
+	int color_index = (4 * palette + colour) % 16;
+	frag_color = palettes[color_index];
 }

@@ -1,9 +1,42 @@
-#include <stdio.h>
-
 #include "src/filesystem.h"
 #include "src/memory.h"
 #define SUBSYSTEM_IMPL
 #include "renderer.h"
+
+// Pixel-to-screen conversion
+// TODO: Demystify window size
+#define NORM_X(x) (((GLfloat)(x)) / 512)
+#define NORM_Y(y) (((GLfloat)(y)) / 512)
+
+// Uniform block object locations
+enum {
+	UBO_PALETTE,
+};
+
+static GLuint vao;
+
+static struct Rect {
+	GLfloat position[2];
+	GLfloat scale[2];
+	GLuint palette;
+	GLuint colour;
+} rects[16];
+static int rect_count;
+static GLuint vbo_rect;
+
+static struct Palette {
+	GLfloat r;
+	GLfloat g;
+	GLfloat b;
+	GLfloat a; // unused
+} palettes[16];
+static GLuint ubo_palette;
+
+enum {
+	PROG_QUAD,
+	PROG_COUNT,
+};
+static GLuint programs[PROG_COUNT];
 
 // Returns: if truthy, glEnable(GL_DEBUG_OUTPUT) and related functions can be called.
 static bool have_gl_debug_output(int glad_gl_version)
@@ -173,19 +206,66 @@ bool init_renderer(GLADloadfunc opengl_loader)
 		glDebugMessageCallback(gl_debug_message_callback, NULL);
 	}
 
-	// TODO: dummy calls to hush compiler warnings, incomplete
-	GLuint quad_shaders[2];
-	quad_shaders[0] = load_shader("shaders/quad.vert", GL_VERTEX_SHADER);
-	quad_shaders[1] = load_shader("shaders/flat_colour.frag", GL_FRAGMENT_SHADER);
-	char *quad_outs[] = { "out_color" };
-	if (quad_shaders[0] != 0 && quad_shaders[1] != 0) {
-		GLuint program = create_shader_program(2, quad_shaders, 1, quad_outs);
-		if (program != 0) {
-			glDeleteProgram(program);
+	// TODO: Currently using one VAO for everything; watch that assumption
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	glGenBuffers(1, &vbo_rect);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_rect); {
+		glBufferData(GL_ARRAY_BUFFER, sizeof(rects), NULL, GL_DYNAMIC_DRAW);
+	}
+
+	glGenBuffers(1, &ubo_palette);
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo_palette); {
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(palettes), palettes, GL_STATIC_DRAW);
+	}
+	glBindBufferRange(GL_UNIFORM_BUFFER, UBO_PALETTE, ubo_palette, 0, sizeof(palettes));
+
+	{
+		GLuint quad_shaders[2];
+		quad_shaders[0] = load_shader("shaders/quad.vert", GL_VERTEX_SHADER);
+		quad_shaders[1] = load_shader("shaders/flat_colour.frag", GL_FRAGMENT_SHADER);
+		gvm_assert(quad_shaders[0] != 0 && quad_shaders[1] != 0, "Failed to compile rectangle shaders\n");
+		char *quad_outs[] = { "out_color" };
+		programs[PROG_QUAD] = create_shader_program(2, quad_shaders, 1, quad_outs);
+		gvm_assert(programs[PROG_QUAD] != 0, "Failed to link rectangle shaders\n");
+		glDeleteShader(quad_shaders[0]);
+		glDeleteShader(quad_shaders[1]);
+
+		GLuint bind_point_palette = glGetUniformBlockIndex(programs[PROG_QUAD], "Palettes");
+		glUniformBlockBinding(programs[PROG_QUAD], bind_point_palette, UBO_PALETTE);
+	}
+
+	glUseProgram(programs[PROG_QUAD]); {
+		GLint in_position = glGetAttribLocation(programs[PROG_QUAD], "position");
+		glEnableVertexAttribArray(in_position);
+		glVertexAttribDivisor(in_position, 1);
+		GLint in_scale = glGetAttribLocation(programs[PROG_QUAD], "scale");
+		glEnableVertexAttribArray(in_scale);
+		glVertexAttribDivisor(in_scale, 1);
+		GLint in_palette = glGetAttribLocation(programs[PROG_QUAD], "palette");
+		glEnableVertexAttribArray(in_palette);
+		glVertexAttribDivisor(in_palette, 1);
+		GLint in_colour = glGetAttribLocation(programs[PROG_QUAD], "colour");
+		glEnableVertexAttribArray(in_colour);
+		glVertexAttribDivisor(in_colour, 1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_rect); {
+			typedef struct Rect r; // convenience abbreviation
+			glVertexAttribPointer(in_position, 2, GL_FLOAT, GL_FALSE, sizeof(r), (void *)offsetof(r, position));
+			glVertexAttribPointer(in_scale, 2, GL_FLOAT, GL_FALSE, sizeof(r), (void *)offsetof(r, scale));
+			glVertexAttribIPointer(in_palette, 1, GL_INT, sizeof(r), (void *)offsetof(r, palette));
+			glVertexAttribIPointer(in_colour, 1, GL_INT, sizeof(r), (void *)offsetof(r, colour));
 		}
 	}
-	glDeleteShader(quad_shaders[0]);
-	glDeleteShader(quad_shaders[1]);
+
+	// Transient state
+	rect_count = 0;
+	// TODO: Remove when palettes are properly initialised
+	palettes[0] = (struct Palette){ 1.0, 1.0, 1.0, 1.0 };
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo_palette); {
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(palettes), palettes);
+	}
 
 	return true;
 }
@@ -203,11 +283,30 @@ bool fill_rect_impl(int x, int y, int w, int h, uint8_t palette, uint8_t colour)
 
 void render()
 {
+	// TODO: Watch VAO, framebuffer, viewport etc.
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	if (rect_count > 0) {
+		glUseProgram(programs[PROG_QUAD]);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_rect); {
+			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rects), rects);
+			glDrawArraysInstanced(GL_TRIANGLES, 0, 6, rect_count);
+		}
+		rect_count = 0;
+	}
 }
 
 void close_renderer()
 {
-	// Nothing to do
+	for (int i = 0; i < PROG_COUNT; ++i) {
+		glDeleteProgram(programs[i]);
+	}
+
+	glBindVertexArray(vao); {
+		glDeleteBuffers(1, &ubo_palette);
+		glDeleteBuffers(1, &vbo_rect);
+	}
+
+	glDeleteVertexArrays(1, &vao);
 }
