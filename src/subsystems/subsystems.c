@@ -39,6 +39,14 @@ void input()
 	input_impl();
 }
 
+// Returns: success
+// TODO: See window_should_close().
+bool fill_rect(GvmConstant position, GvmConstant scale, uint8_t palette, uint8_t colour)
+{
+	// TODO: Type checking
+	return fill_rect_impl(position.as.vec2[0], position.as.vec2[1], scale.as.vec2[0], scale.as.vec2[1], palette, colour);
+}
+
 void draw()
 {
 	render();

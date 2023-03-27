@@ -9,6 +9,7 @@
 #include "src/common.h"
 
 bool init_renderer(GLADloadfunc opengl_loader);
+bool fill_rect_impl(int x, int y, int w, int h, uint8_t palette, uint8_t colour);
 void render();
 void close_renderer();
 

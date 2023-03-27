@@ -190,6 +190,17 @@ bool init_renderer(GLADloadfunc opengl_loader)
 	return true;
 }
 
+// Queue a rectangle for rendering this frame
+bool fill_rect_impl(int x, int y, int w, int h, uint8_t palette, uint8_t colour)
+{
+	if (rect_count >= sizeof(rects) / sizeof(rects[0])) {
+		return false;
+	}
+
+	rects[rect_count++] = (struct Rect){ { NORM_X(x), NORM_Y(y) }, { NORM_X(w), NORM_Y(h) }, palette, colour };
+	return true;
+}
+
 void render()
 {
 	glClearColor(0.0, 0.0, 0.0, 0.0);
