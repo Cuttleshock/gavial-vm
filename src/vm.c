@@ -222,10 +222,17 @@ static bool update()
 				return true;
 			}
 			case OP_CLEAR_SCREEN: { // TODO
-				return true;
+				uint8_t palette = vm.instructions[++i];
+				uint8_t colour = vm.instructions[++i];
+				break;
 			}
-			case OP_FILL_RECT: { // TODO
-				return true;
+			case OP_FILL_RECT: {
+				uint8_t palette = vm.instructions[++i];
+				uint8_t colour = vm.instructions[++i];
+				GvmConstant scale = pop();
+				GvmConstant position = pop();
+				fill_rect(position, scale, palette, colour); // TODO: what if this fails?
+				break;
 			}
 			case OP_SWAP: {
 				GvmConstant b = pop();
