@@ -218,8 +218,11 @@ static bool update()
 				modify(result);
 				break;
 			}
-			case OP_LOAD_PAL: { // TODO
-				return true;
+			case OP_LOAD_PAL: {
+				uint8_t bind_point = vm.instructions[++i];
+				uint8_t target = vm.instructions[++i];
+				bind_palette(bind_point, target); // TODO: error checking
+				break;
 			}
 			case OP_FILL_RECT: {
 				uint8_t palette = vm.instructions[++i];
