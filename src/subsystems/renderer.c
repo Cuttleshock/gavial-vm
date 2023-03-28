@@ -20,17 +20,22 @@ static struct Rect {
 	GLfloat scale[2];
 	GLuint palette;
 	GLuint colour;
-} rects[16];
+} rects[16]; // TODO: magic number
 static int rect_count;
 static GLuint vbo_rect;
 
-static struct Palette {
+static struct Colour {
 	GLfloat r;
 	GLfloat g;
 	GLfloat b;
 	GLfloat a; // unused
-} palettes[16];
+} colours[64]; // 16 palettes of 4 colours; TODO: magic number
 static GLuint ubo_palette;
+
+// 4 palettes of 4 colours; TODO: magic number
+static struct Colour bound_palettes[16]; // Inline copies from colours[]
+static uint8_t bound_indices[4]; // What does each bound_palette copy?
+static bool bound_touched; // If true, bound_palettes needs refreshing before render
 
 enum {
 	PROG_QUAD,
@@ -217,9 +222,9 @@ bool init_renderer(GLADloadfunc opengl_loader)
 
 	glGenBuffers(1, &ubo_palette);
 	glBindBuffer(GL_UNIFORM_BUFFER, ubo_palette); {
-		glBufferData(GL_UNIFORM_BUFFER, sizeof(palettes), palettes, GL_STATIC_DRAW);
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(bound_palettes), NULL, GL_DYNAMIC_DRAW);
 	}
-	glBindBufferRange(GL_UNIFORM_BUFFER, UBO_PALETTE, ubo_palette, 0, sizeof(palettes));
+	glBindBufferRange(GL_UNIFORM_BUFFER, UBO_PALETTE, ubo_palette, 0, sizeof(bound_palettes));
 
 	{
 		GLuint quad_shaders[2];
@@ -261,19 +266,60 @@ bool init_renderer(GLADloadfunc opengl_loader)
 
 	// Transient state
 	rect_count = 0;
-	// TODO: Remove when palettes are properly initialised
-	palettes[0] = (struct Palette){ 1.0, 1.0, 1.0, 1.0 };
-	glBindBuffer(GL_UNIFORM_BUFFER, ubo_palette); {
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(palettes), palettes);
+
+	for (int i = 0; i < 4; ++i) {
+		set_palette_colour_impl(0, i, 0.0, 0.0, 0.0);
+	}
+
+	for (int i = 0; i < sizeof(bound_indices) / sizeof(bound_indices[0]); ++i) {
+		bind_palette_impl(i, 0);
 	}
 
 	return true;
 }
 
+// Bind runtime palette to saved palette
+// Returns: false if arguments invalid
+bool bind_palette_impl(uint8_t bind_point, uint8_t target)
+{
+	int max_bind_point = sizeof(bound_indices) / sizeof(bound_indices[0]);
+	int max_target = sizeof(colours) / sizeof(colours[0]) / 4;
+	if (bind_point >= max_bind_point || target >= max_target) {
+		return false;
+	}
+
+	if (bound_indices[bind_point] != target) {
+		bound_indices[bind_point] = target;
+		bound_touched = true;
+	}
+
+	return true;
+}
+
+// Store colour in one of the palettes
+// Returns: false if arguments invalid
+bool set_palette_colour_impl(uint8_t palette, uint8_t colour, float r, float g, float b)
+{
+	int max_palette = sizeof(colours) / sizeof(colours[0]) / 4;
+	if (palette >= max_palette || colour >= 4) {
+		return false;
+	}
+
+	colours[palette * 4 + colour].r = r;
+	colours[palette * 4 + colour].g = g;
+	colours[palette * 4 + colour].b = b;
+	colours[palette * 4 + colour].a = 0.0;
+	bound_touched = true; // TODO: Don't need this unless palette is bound
+
+	return true;
+}
+
 // Queue a rectangle for rendering this frame
+// Returns: false if arguments invalid
 bool fill_rect_impl(int x, int y, int w, int h, uint8_t palette, uint8_t colour)
 {
-	if (rect_count >= sizeof(rects) / sizeof(rects[0])) {
+	int max_palette = sizeof(colours) / sizeof(colours[0]) / 4;
+	if (rect_count >= sizeof(rects) / sizeof(rects[0]) || palette >= max_palette || colour >= 4) {
 		return false;
 	}
 
@@ -284,7 +330,29 @@ bool fill_rect_impl(int x, int y, int w, int h, uint8_t palette, uint8_t colour)
 void render()
 {
 	// TODO: Watch VAO, framebuffer, viewport etc.
-	glClearColor(0.0, 0.0, 0.0, 0.0);
+	if (bound_touched) {
+		// Copy over all colours...
+		for (int palette = 0; palette < 4; ++palette) {
+			for (int colour = 0; colour < 4; ++colour) {
+				struct Colour *b = &bound_palettes[4 * palette + colour];
+				struct Colour *t = &colours[4 * bound_indices[palette] + colour];
+				b->r = t->r;
+				b->g = t->g;
+				b->b = t->b;
+				b->a = t->a;
+			}
+		}
+
+		// ... then update OpenGL state
+		glBindBuffer(GL_UNIFORM_BUFFER, ubo_palette); {
+			glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(bound_palettes), bound_palettes);
+		}
+
+		bound_touched = false;
+	}
+
+	struct Colour clear_colour = bound_palettes[0]; // always clear to colour (0, 0)
+	glClearColor(clear_colour.r, clear_colour.g, clear_colour.b, clear_colour.a);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	if (rect_count > 0) {

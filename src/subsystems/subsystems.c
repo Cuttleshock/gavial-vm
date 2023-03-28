@@ -47,6 +47,20 @@ bool fill_rect(GvmConstant position, GvmConstant scale, uint8_t palette, uint8_t
 	return fill_rect_impl(position.as.vec2[0], position.as.vec2[1], scale.as.vec2[0], scale.as.vec2[1], palette, colour);
 }
 
+// Returns: success
+// TODO: See window_should_close().
+bool bind_palette(uint8_t bind_point, uint8_t target)
+{
+	return bind_palette_impl(bind_point, target);
+}
+
+// Returns: success
+// TODO: Should we just have subsystems.h declare set_palette_colour_impl() directly?
+bool set_palette_colour(int palette, int colour, float r, float g, float b)
+{
+	return set_palette_colour_impl(palette, colour, r, g, b);
+}
+
 void draw()
 {
 	render();
