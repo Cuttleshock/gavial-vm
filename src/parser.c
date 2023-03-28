@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "parser.h"
+#include "subsystems/subsystems.h"
 #include "value.h"
 #include "vm.h"
 
@@ -77,7 +78,7 @@ static bool parse_update()
 	instruction(3);
 	instruction(OP_FILL_RECT);
 	instruction(0);
-	instruction(0);
+	instruction(1);
 	constant(VEC2(100, 80));
 	instruction(OP_LOAD_CONST);
 	instruction(4);
@@ -85,9 +86,27 @@ static bool parse_update()
 	instruction(OP_LOAD_CONST);
 	instruction(5);
 	instruction(OP_FILL_RECT);
-	instruction(0);
-	instruction(0);
+	instruction(1);
+	instruction(2);
 	instruction(OP_RETURN);
+
+	return true;
+}
+
+static bool parse_palettes()
+{
+	// TODO: Error checking
+	set_palette_colour(0, 0, 0.0, 0.0, 0.0); // black
+	set_palette_colour(0, 1, 1.0, 0.0, 0.0); // red
+	set_palette_colour(0, 2, 0.0, 1.0, 0.0); // green
+	set_palette_colour(0, 3, 0.0, 0.0, 1.0); // blue
+	bind_palette(0, 0);
+
+	set_palette_colour(1, 0, 1.0, 1.0, 1.0); // white
+	set_palette_colour(1, 1, 1.0, 0.0, 1.0); // magenta
+	set_palette_colour(1, 2, 0.0, 1.0, 1.0); // cyan
+	set_palette_colour(1, 3, 1.0, 1.0, 0.0); // brown or something
+	bind_palette(1, 1);
 
 	return true;
 }
@@ -98,6 +117,7 @@ bool parse()
 
 	TRY(parse_state());
 	TRY(parse_update());
+	TRY(parse_palettes());
 	return true;
 
 #undef TRY
