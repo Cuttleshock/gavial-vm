@@ -23,7 +23,6 @@ typedef enum {
 	OP_GREATER_THAN,
 	// Drawing
 	OP_LOAD_PAL,
-	OP_CLEAR_SCREEN,
 	OP_FILL_RECT,
 	// Stack manipulation
 	OP_SWAP,

@@ -29,7 +29,6 @@ static int disassemble_instruction(int i)
 		CASE(OP_LESS_THAN);
 		CASE(OP_GREATER_THAN);
 		CASE_2BYTE(OP_LOAD_PAL);
-		CASE_2BYTE(OP_CLEAR_SCREEN);
 		CASE_2BYTE(OP_FILL_RECT);
 		CASE(OP_SWAP);
 		CASE(OP_DUP);

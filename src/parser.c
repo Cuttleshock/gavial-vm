@@ -69,9 +69,6 @@ static bool parse_update()
 	instruction(OP_LOAD_CONST);
 	instruction(1);
 	instruction(OP_ADD);
-	instruction(OP_CLEAR_SCREEN);
-	instruction(2);
-	instruction(3);
 	constant(VEC2(200, 300));
 	instruction(OP_LOAD_CONST);
 	instruction(2);

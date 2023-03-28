@@ -221,11 +221,6 @@ static bool update()
 			case OP_LOAD_PAL: { // TODO
 				return true;
 			}
-			case OP_CLEAR_SCREEN: { // TODO
-				uint8_t palette = vm.instructions[++i];
-				uint8_t colour = vm.instructions[++i];
-				break;
-			}
 			case OP_FILL_RECT: {
 				uint8_t palette = vm.instructions[++i];
 				uint8_t colour = vm.instructions[++i];
