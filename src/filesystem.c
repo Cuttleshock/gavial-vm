@@ -9,13 +9,13 @@
 // Returns: success
 static bool make_absolute_path(const char *relative, char *out_buf, size_t bufsize)
 {
-	if (bufsize == 0) { // TODO: too paranoid?
+	if (strlen(relative) >= bufsize) {
 		return false;
 	}
 
 	if (relative[0] == '/') {
-		strncpy(out_buf, relative, bufsize);
-		return (out_buf[bufsize - 1] != '\0');
+		strcpy(out_buf, relative);
+		return true;
 	}
 
 	// Write the executable's cwd to out_buf
