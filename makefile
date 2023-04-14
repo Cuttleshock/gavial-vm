@@ -10,11 +10,11 @@ COMPILE_FLAGS := -Wall -c `pkg-config --cflags $(DEP_DIR)/glfw3.pc` -I.
 SOURCES := $(wildcard $(SOURCE_DIR)/*.c) $(wildcard $(SOURCE_DIR)/**/*.c) $(wildcard $(DEP_DIR)/*.c)
 HEADERS := $(wildcard $(SOURCE_DIR)/*.h) $(wildcard $(SOURCE_DIR)/**/*.h) $(wildcard $(DEP_DIR)/*.h)
 OBJECTS = $(addprefix $(OBJ_DIR)/, $(SOURCES:.c=.o))
-COPY_FILES := $(addprefix $(BUILD_DIR)/, $(wildcard shaders/*) LICENSE)
+COPY_FILES = $(addprefix $(BUILD_DIR)/, $(wildcard shaders/*) LICENSE)
 
 ifeq ($(DEBUG), true)
-	LINK_FLAGS += -O0 -DDEBUG -g
-	COMPILE_FLAGS += -O0 -DDEBUG -g
+	LINK_FLAGS += -O0 -DDEBUG -DCCM_DEBUG_PRINT_TOKENS -DCCM_DEBUG_PRINT_DEFINITION -g
+	COMPILE_FLAGS += -O0 -DDEBUG -DCCM_DEBUG_PRINT_TOKENS -DCCM_DEBUG_PRINT_DEFINITION -g
 	BUILD_DIR := $(BUILD_DIR)/debug
 else
 	LINK_FLAGS += -O3

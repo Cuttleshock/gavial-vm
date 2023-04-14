@@ -1,10 +1,15 @@
 #include <string.h>
 
 #include "common.h"
+#include "crocomacs/crocomacs.h"
+#include "filesystem.h"
+#include "memory.h"
 #include "parser.h"
 #include "subsystems/subsystems.h"
 #include "value.h"
 #include "vm.h"
+
+static int constant_count = 0;
 
 static GvmState dummy_state[] = {
 	{ "snakes", LIT_SCAL(0), LIT_SCAL(5), VAL_SCALAR },
@@ -61,36 +66,80 @@ static bool parse_state()
 	return true;
 }
 
-static bool parse_update()
+// TODO: Better to shape CcmRealloc like gvm_realloc()
+static void *ccm_realloc_wrapper(void *ptr, size_t size)
 {
-	constant(SCAL(3));
-	instruction(OP_LOAD_CONST);
-	instruction(0);
-	constant(SCAL(5));
-	instruction(OP_LOAD_CONST);
-	instruction(1);
-	instruction(OP_ADD);
-	constant(VEC2(200, 300));
-	instruction(OP_LOAD_CONST);
-	instruction(2);
-	constant(VEC2(50, 80));
-	instruction(OP_LOAD_CONST);
-	instruction(3);
-	instruction(OP_FILL_RECT);
-	instruction(0);
-	instruction(1);
-	constant(VEC2(100, 80));
-	instruction(OP_LOAD_CONST);
-	instruction(4);
-	constant(VEC2(100, 80));
-	instruction(OP_LOAD_CONST);
-	instruction(5);
-	instruction(OP_FILL_RECT);
-	instruction(1);
-	instruction(2);
-	instruction(OP_RETURN);
+	return gvm_realloc(ptr, 0, size);
+}
 
-	return true;
+static void hook_number(double d)
+{
+	constant(SCAL(d));
+	instruction(OP_LOAD_CONST);
+	instruction(constant_count++);
+}
+
+static void hook_string(const char *str, int length)
+{
+	gvm_log("STRING: %.*s\n", length, str);
+}
+
+static void hook_ADD(CcmList *)
+{
+	instruction(OP_ADD);
+}
+
+// TODO: Argument checking
+static void hook_VEC2(CcmList lists[])
+{
+	int a = lists[0].values[0].as.number;
+	int b = lists[1].values[0].as.number;
+	constant(VEC2(a, b));
+	instruction(OP_LOAD_CONST);
+	instruction(constant_count++);
+}
+
+// TODO: Argument checking
+static void hook_FILL_RECT(CcmList lists[])
+{
+	int pal = lists[0].values[0].as.number;
+	int col = lists[1].values[0].as.number;
+	instruction(OP_FILL_RECT);
+	instruction(pal);
+	instruction(col);
+}
+
+static void hook_RETURN(CcmList *)
+{
+	instruction(OP_RETURN);
+}
+
+static bool parse_update_impl(const char *src, int src_length)
+{
+#define TRY(name, arg_count) \
+	if (!ccm_define_primitive(#name, sizeof(#name) - 1, arg_count, hook_ ## name)) return false;
+
+	ccm_set_logger(gvm_error);
+	ccm_set_allocators(gvm_malloc, ccm_realloc_wrapper, gvm_free);
+	ccm_set_number_hook(hook_number);
+	ccm_set_string_hook(hook_string);
+
+	TRY(ADD, 0);
+	TRY(VEC2, 2);
+	TRY(FILL_RECT, 2);
+	TRY(RETURN, 0);
+
+	return ccm_execute(src, src_length);
+
+#undef TRY
+}
+
+static bool parse_update(const char *src, int src_length)
+{
+	bool success = parse_update_impl(src, src_length);
+	ccm_cleanup();
+	constant_count = 0;
+	return success;
 }
 
 static bool parse_palettes()
@@ -111,13 +160,23 @@ static bool parse_palettes()
 	return true;
 }
 
-bool parse()
+bool parse(const char *rom_path)
 {
 #define TRY(p) if (!p) return false;
 
+	int src_length;
+	char *src = read_file(rom_path, &src_length);
+	if (NULL == src) {
+		gvm_error("Could not read file: aborting\n");
+		return false;
+	}
+
 	TRY(parse_state());
-	TRY(parse_update());
+	TRY(parse_update(src, src_length));
 	TRY(parse_palettes());
+
+	gvm_free(src);
+
 	return true;
 
 #undef TRY

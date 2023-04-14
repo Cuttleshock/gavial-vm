@@ -125,18 +125,18 @@ static void print_program_log(GLuint program)
 {
 	GLint log_length;
 	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_length);
-	char *buffer = gvm_malloc(log_length + 1);
+	char *buffer = gvm_malloc(log_length + 1); // TODO: more NULL-checking all round
 	buffer[log_length] = '\0';
 	glGetProgramInfoLog(program, log_length, NULL, buffer);
 	gvm_log("%s\n", buffer);
 	gvm_free(buffer);
 }
 
-// Loads a shader relative given a relative filepath.
-// Returns: shader handle, or 0 on failure.
+// Loads a shader given a path relative to executable
+// Returns: shader handle, or 0 on failure
 static GLuint load_shader(char *path, GLenum shader_type)
 {
-	char *buffer = read_file(path);
+	char *buffer = read_file_executable(path, NULL);
 	if (buffer == NULL) {
 		return 0;
 	}

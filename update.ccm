@@ -1,0 +1,10 @@
+UPDATE ; this is strictly unnecessary
+:UPDATE()
+	"aaaaaa   sdf" "" "asdf \a sdjf" "\\" "asdf \" asdf" "a a a \\\\\\\ \ "
+	+(3, 5)
+	RECT(200, 300, 50, 80)(0, 1)
+	RECT(100, 80, 100, 80)(1, 2)
+	#RETURN
+
+:+(?a, ?b) ?a ?b #ADD
+:RECT(?x, ?y, ?w, ?h) #VEC2(?x, ?y) #VEC2(?w, ?h) #FILL_RECT
