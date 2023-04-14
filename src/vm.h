@@ -13,9 +13,11 @@ typedef enum {
 	// Arithmetic
 	OP_ADD,
 	OP_SUBTRACT,
+	OP_MODULO,
 	// Vectors
 	OP_GET_X,
 	OP_GET_Y,
+	OP_MAKE_VEC2,
 	// Control flow
 	OP_IF,
 	// Booleans
@@ -37,6 +39,7 @@ bool run_vm();
 void close_vm();
 bool instruction(uint8_t byte);
 int constant(GvmConstant value);
+bool locate_state(const char *name, int name_length, int *index);
 bool define_state(GvmConstant value, const char *name);
 bool set_state(GvmConstant value, const char *name);
 

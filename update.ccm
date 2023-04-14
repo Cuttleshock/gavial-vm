@@ -2,15 +2,23 @@ INIT UPDATE
 
 :INIT()
 	#DEFINE_SCALAR("snakes", 0)
-	#DEFINE_VEC2("badgers", 0, 0)
+	#DEFINE_VEC2("badgers", 100, 200)
 	#DEFINE_VEC4("dogs", 0, 0, 0, 0)
 
 :UPDATE()
-	"aaaaaa   sdf" "" "asdf \a sdjf" "\\" "asdf \" asdf" "a a a \\\\\\\ \ "
-	+(3, 5)
-	RECT(200, 300, 50, 80)(0, 1)
-	RECT(100, 80, 100, 80)(1, 2)
+	RECT(
+		%(`Time, SCREEN_WIDTH) 300 #MAKE_VEC2,
+		V2(50, 80)
+	)(0, 1)
+	RECT(
+		V2(100, 80),
+		`badgers
+	)(1, 2)
 	#RETURN
 
+:V2() #VEC2
 :+(?a, ?b) ?a ?b #ADD
-:RECT(?x, ?y, ?w, ?h) #VEC2(?x, ?y) #VEC2(?w, ?h) #FILL_RECT
+:%(?a, ?b) ?a ?b #MODULO
+:CONST_RECT(?x, ?y, ?w, ?h) V2(?x, ?y) V2(?w, ?h) #FILL_RECT
+:RECT(?loc, ?size) ?loc ?size #FILL_RECT
+:SCREEN_WIDTH() 512

@@ -18,30 +18,6 @@ static GvmState auto_state[] = {
 	{ "Pal0", LIT_SCAL(0), LIT_SCAL(0), VAL_SCALAR },
 };
 
-// Binary search for a named variable in VM's state list
-// If not found, index is where it should be inserted to maintain order
-static struct location {
-	bool found;
-	int index;
-} locate_state(const char *name)
-{
-	int length = strlen(name);
-	int low = 0;
-	int high = vm.state_count - 1;
-	int current = low + high / 2;
-	for (; low <= high; current = (low + high) / 2) {
-		int cmp = strncmp(name, vm.state[current].name, length);
-		if (cmp < 0) {
-			high = current - 1;
-		} else if (cmp > 0) {
-			low = current + 1;
-		} else {
-			return (struct location){ true, current };
-		}
-	}
-	return (struct location){ false, low };
-}
-
 static void runtime_error(const char *message)
 {
 	if (!vm.had_error) {
@@ -127,12 +103,23 @@ static bool update()
 				modify(result);
 				continue;
 			}
+			case OP_MODULO: {
+				GvmConstant b = pop();
+				GvmConstant a = peek();
+				modify(SCAL(a.as.scalar % b.as.scalar));
+				break;
+			}
 			case OP_GET_X:
 				modify(SCAL(peek().as.vec2[0]));
 				continue;
 			case OP_GET_Y:
 				modify(SCAL(peek().as.vec2[1]));
 				continue;
+			case OP_MAKE_VEC2:
+				GvmConstant y = pop();
+				GvmConstant x = peek();
+				modify(VEC2(x.as.scalar, y.as.scalar));
+				break;
 			case OP_IF: // TODO
 				runtime_error("OP_IF: Unimplemented");
 				continue;
@@ -221,6 +208,30 @@ bool init_vm()
 	return true;
 }
 
+// Return value: true if named state is defined
+// If true, *index contains its location; else, the proper insertion location
+// to maintain order
+// TODO: Again, remove 'length' arg as soon as we clean up CCM strings
+bool locate_state(const char *name, int name_length, int *index)
+{
+	int low = 0;
+	int high = vm.state_count - 1;
+	int current = low + high / 2;
+	for (; low <= high; current = (low + high) / 2) {
+		int cmp = strncmp(name, vm.state[current].name, name_length);
+		if (cmp < 0) {
+			high = current - 1;
+		} else if (cmp > 0) {
+			low = current + 1;
+		} else {
+			*index = current;
+			return true;
+		}
+	}
+	*index = low;
+	return false;
+}
+
 // Insert variable in state list, keeping it sorted by name. Copies name to heap.
 // Returns true on successful insertion
 bool define_state(GvmConstant value, const char *name)
@@ -229,12 +240,13 @@ bool define_state(GvmConstant value, const char *name)
 		return false;
 	}
 
-	struct location loc = locate_state(name);
-	if (loc.found) {
+	int length = strlen(name);
+	int index;
+	bool found = locate_state(name, length, &index);
+	if (found) {
 		return false;
 	}
 
-	int length = strlen(name);
 	char *own_name = gvm_malloc(length + 1);
 	if (NULL == own_name) {
 		return false;
@@ -244,11 +256,11 @@ bool define_state(GvmConstant value, const char *name)
 	own_name[length] = '\0';
 
 	// Move all items one to the right
-	for (int i = vm.state_count; i > loc.index; --i) {
+	for (int i = vm.state_count; i > index; --i) {
 		vm.state[i] = vm.state[i - 1];
 	}
 
-	GvmState *state = &vm.state[loc.index];
+	GvmState *state = &vm.state[index];
 	state->name = own_name;
 	state->init = value.as;
 	state->current = value.as;
@@ -295,9 +307,12 @@ void close_vm()
 bool run_vm()
 {
 	bool loop_done = false;
+	int time_index; // TODO: very careful
+	locate_state("Time", 4, &time_index);
 
 	while (!loop_done) {
 		input();
+		++vm.state[time_index].current.scalar;
 		loop_done = update();
 		draw(); // TODO: Unlink vsync from update logic
 		loop_done = loop_done || window_should_close();

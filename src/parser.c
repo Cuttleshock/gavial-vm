@@ -27,6 +27,18 @@ static void hook_string(const char *str, int length)
 	gvm_log("STRING: %.*s\n", length, str);
 }
 
+static void hook_symbol(const char *str, int length)
+{
+	int index;
+	bool found = locate_state(str, length, &index);
+	if (!found) {
+		ccm_runtime_error("Undefined variable");
+	} else {
+		instruction(OP_GET);
+		instruction(index);
+	}
+}
+
 static void hook_DEFINE_SCALAR(CcmList lists[])
 {
 	const char *name = lists[0].values[0].as.str.chars;
@@ -70,6 +82,25 @@ static void hook_DEFINE_VEC4(CcmList lists[])
 	gvm_free(name_copy);
 }
 
+static void hook_SET(CcmList lists[])
+{
+	const char *name = lists[0].values[0].as.str.chars;
+	int length = lists[0].values[0].as.str.length;
+	int index;
+	bool found = locate_state(name, length, &index);
+	if (!found) {
+		ccm_runtime_error("Undefined variable");
+	} else {
+		instruction(OP_SET);
+		instruction(index);
+	}
+}
+
+static void hook_MODULO(CcmList *)
+{
+	instruction(OP_MODULO);
+}
+
 static void hook_ADD(CcmList *)
 {
 	instruction(OP_ADD);
@@ -83,6 +114,11 @@ static void hook_VEC2(CcmList lists[])
 	uint8_t index = constant(VEC2(a, b)); // TODO: ... and error checking
 	instruction(OP_LOAD_CONST);
 	instruction(index);
+}
+
+static void hook_MAKE_VEC2(CcmList lists[])
+{
+	instruction(OP_MAKE_VEC2);
 }
 
 // TODO: Argument checking
@@ -109,12 +145,16 @@ static bool parse_update_impl(const char *src, int src_length)
 	ccm_set_allocators(gvm_malloc, ccm_realloc_wrapper, gvm_free);
 	ccm_set_number_hook(hook_number);
 	ccm_set_string_hook(hook_string);
+	ccm_set_symbol_hook(hook_symbol);
 
 	TRY(DEFINE_SCALAR, 2);
 	TRY(DEFINE_VEC2, 3);
 	TRY(DEFINE_VEC4, 5);
+	TRY(SET, 1);
 	TRY(ADD, 0);
+	TRY(MODULO, 0);
 	TRY(VEC2, 2);
+	TRY(MAKE_VEC2, 0);
 	TRY(FILL_RECT, 2);
 	TRY(RETURN, 0);
 

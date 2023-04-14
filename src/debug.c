@@ -23,8 +23,10 @@ static int disassemble_instruction(int i)
 		CASE_BYTE(OP_LOAD_CONST);
 		CASE(OP_ADD);
 		CASE(OP_SUBTRACT);
+		CASE(OP_MODULO);
 		CASE(OP_GET_X);
 		CASE(OP_GET_Y);
+		CASE(OP_MAKE_VEC2);
 		CASE_BYTE(OP_IF);
 		CASE(OP_LESS_THAN);
 		CASE(OP_GREATER_THAN);
