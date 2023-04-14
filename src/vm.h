@@ -53,6 +53,7 @@ struct VM {
 };
 
 bool init_vm();
+void close_vm();
 bool instruction(uint8_t byte);
 bool constant(GvmConstant value);
 bool run_vm();

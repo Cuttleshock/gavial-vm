@@ -9,24 +9,18 @@
 
 struct VM vm;
 
+// TODO: We may be able to get away without init() and close(): statically
+// allocate instructions at first, but grow them dynamically when needed...
 bool init_vm()
 {
 	vm.instructions = gvm_malloc(INSTRUCTIONS_INITIAL_SIZE);
 	vm.capacity = INSTRUCTIONS_INITIAL_SIZE;
 	vm.count = 0;
-	if (!vm.instructions) {
-		return false;
-	}
-
-	if (!init_subsystems()) {
-		gvm_free(vm.instructions);
-		return false;
-	}
-
-	return true;
+	return (vm.instructions != NULL);
 }
 
-static void close_vm()
+// TODO: ... then free() them if needed after run_vm()
+void close_vm()
 {
 	gvm_free(vm.instructions);
 }
@@ -229,7 +223,7 @@ static bool update()
 				uint8_t colour = vm.instructions[++i];
 				GvmConstant scale = pop();
 				GvmConstant position = pop();
-				fill_rect(position, scale, palette, colour); // TODO: what if this fails?
+				fill_rect(V2X(position), V2Y(position), V2X(scale), V2Y(scale), palette, colour); // TODO: what if this fails?
 				break;
 			}
 			case OP_SWAP: {
@@ -271,8 +265,5 @@ bool run_vm()
 		draw(); // TODO: Unlink vsync from update logic
 		loop_done = loop_done || window_should_close();
 	}
-
-	close_vm();
-	close_subsystems();
 	return true;
 }
