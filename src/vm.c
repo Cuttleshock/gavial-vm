@@ -157,74 +157,79 @@ static bool update()
 {
 	vm.stack_count = 0;
 
-	for (int i = 0; i < vm.count; ++i) {
+	for (int i = 0; i < vm.count && !vm.had_error; ++i) {
 		switch (vm.instructions[i]) {
 			case OP_SET: {
 				uint8_t index = vm.instructions[++i];
 				GvmConstant val = pop();
 				vm.state[index].current = val.as;
-				break;
+				continue;
 			}
 			case OP_GET: {
 				uint8_t index = vm.instructions[++i];
 				push((GvmConstant){ vm.state[index].current, vm.state[index].type });
-				break;
+				continue;
 			}
 			case OP_LOAD_CONST: {
 				uint8_t index = vm.instructions[++i];
 				push(vm.constants[index]);
-				break;
+				continue;
 			}
 			case OP_ADD: {
 				GvmConstant b = pop();
 				GvmConstant a = peek();
 				GvmConstant result = add_vals(a, b);
 				modify(result);
-				break;
+				continue;
 			}
 			case OP_SUBTRACT: {
 				GvmConstant b = pop();
 				GvmConstant a = peek();
 				GvmConstant result = subtract_vals(a, b);
 				modify(result);
-				break;
+				continue;
 			}
 			case OP_GET_X:
 				modify(SCAL(peek().as.vec2[0]));
-				break;
+				continue;
 			case OP_GET_Y:
 				modify(SCAL(peek().as.vec2[1]));
-				break;
-			case OP_IF: { // TODO
-				return true;
-			}
+				continue;
+			case OP_IF: // TODO
+				runtime_error("OP_IF: Unimplemented");
+				continue;
 			case OP_LESS_THAN: {
 				GvmConstant b = pop();
 				GvmConstant a = peek();
 				GvmConstant result = val_less_than(a, b);
 				modify(result);
-				break;
+				continue;
 			}
 			case OP_GREATER_THAN: {
 				GvmConstant b = pop();
 				GvmConstant a = peek();
 				GvmConstant result = val_greater_than(a, b);
 				modify(result);
-				break;
+				continue;
 			}
 			case OP_LOAD_PAL: {
 				uint8_t bind_point = vm.instructions[++i];
 				uint8_t target = vm.instructions[++i];
-				bind_palette(bind_point, target); // TODO: error checking
-				break;
+				if (!bind_palette(bind_point, target)) {
+					// TODO: This should be statically checkable
+					runtime_error("Failed to load palette");
+				}
+				continue;
 			}
 			case OP_FILL_RECT: {
 				uint8_t palette = vm.instructions[++i];
 				uint8_t colour = vm.instructions[++i];
 				GvmConstant scale = pop();
 				GvmConstant position = pop();
-				fill_rect(V2X(position), V2Y(position), V2X(scale), V2Y(scale), palette, colour); // TODO: what if this fails?
-				break;
+				if (!fill_rect(V2X(position), V2Y(position), V2X(scale), V2Y(scale), palette, colour)) {
+					runtime_error("Failed to draw rectangle");
+				}
+				continue;
 			}
 			case OP_SWAP: {
 				GvmConstant b = pop();

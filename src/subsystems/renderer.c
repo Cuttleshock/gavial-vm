@@ -280,11 +280,16 @@ bool init_renderer(GLADloadfunc opengl_loader)
 
 // Bind runtime palette to saved palette
 // Returns: false if arguments invalid
+// TODO: See fill_rect_impl
 bool bind_palette_impl(uint8_t bind_point, uint8_t target)
 {
 	int max_bind_point = sizeof(bound_indices) / sizeof(bound_indices[0]);
 	int max_target = sizeof(colours) / sizeof(colours[0]) / 4;
-	if (bind_point >= max_bind_point || target >= max_target) {
+	if (bind_point >= max_bind_point) {
+		gvm_error("Invalid palette bind point %d\n", bind_point);
+		return false;
+	} else if (target >= max_target) {
+		gvm_error("Invalid palette selected for bind: %d\n", target);
 		return false;
 	}
 
@@ -297,11 +302,16 @@ bool bind_palette_impl(uint8_t bind_point, uint8_t target)
 }
 
 // Store colour in one of the palettes
-// Returns: false if arguments invalid
+// Returns: success
+// TODO: See fill_rect_impl
 bool set_palette_colour_impl(uint8_t palette, uint8_t colour, float r, float g, float b)
 {
 	int max_palette = sizeof(colours) / sizeof(colours[0]) / 4;
-	if (palette >= max_palette || colour >= 4) {
+	if (palette >= max_palette) {
+		gvm_error("Invalid palette index %d\n", palette);
+		return false;
+	} else if (colour >= 4) {
+		gvm_error("Invalid colour index %d\n", colour);
 		return false;
 	}
 
@@ -315,11 +325,21 @@ bool set_palette_colour_impl(uint8_t palette, uint8_t colour, float r, float g, 
 }
 
 // Queue a rectangle for rendering this frame
-// Returns: false if arguments invalid
+// Returns: success
+// TODO: For an alternate interface, we could always succeed: silently mod
+// palette and colour, and just start overwriting rects past limit.
 bool fill_rect_impl(int x, int y, int w, int h, uint8_t palette, uint8_t colour)
 {
 	int max_palette = sizeof(colours) / sizeof(colours[0]) / 4;
-	if (rect_count >= sizeof(rects) / sizeof(rects[0]) || palette >= max_palette || colour >= 4) {
+	int max_rects = sizeof(rects) / sizeof(rects[0]);
+	if (rect_count >= max_rects) {
+		gvm_error("Reached rectangle draw limit of %d\n", max_rects);
+		return false;
+	} else if (palette >= max_palette) {
+		gvm_error("Invalid palette index %d\n", palette);
+		return false;
+	} else if (colour >= 4) {
+		gvm_error("Invalid colour index %d\n", colour);
 		return false;
 	}
 
