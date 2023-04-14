@@ -32,32 +32,12 @@ typedef enum {
 	OP_RETURN,
 } OpCode;
 
-typedef struct {
-	const char *name;
-	GvmLiteral init;
-	GvmLiteral current;
-	GvmValType type;
-} GvmState;
-
-struct VM {
-	uint8_t *instructions;
-	size_t capacity;
-	size_t count;
-	GvmState state[256];
-	size_t state_count;
-	GvmConstant stack[256];
-	size_t stack_count;
-	GvmConstant constants[256];
-	size_t constants_count;
-	bool had_error;
-};
-
 bool init_vm();
+bool run_vm();
 void close_vm();
 bool instruction(uint8_t byte);
 bool constant(GvmConstant value);
-bool run_vm();
-bool insert_state(GvmState item, int length);
-GvmState *get_state(const char *name, int length);
+bool define_state(GvmConstant value, const char *name);
+bool set_state(GvmConstant value, const char *name);
 
 #endif // VM_H

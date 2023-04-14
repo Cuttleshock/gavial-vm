@@ -5,8 +5,8 @@
 #include "value.h"
 #include "vm.h"
 
-// Declare 'private' VM components so we don't have to expose them to non-debug code
-extern struct VM vm;
+#define VM_IMPL
+#include "vm_internals.h"
 
 static int disassemble_instruction(int i)
 {

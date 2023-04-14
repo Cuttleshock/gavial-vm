@@ -9,62 +9,8 @@
 #include "value.h"
 #include "vm.h"
 
+// TODO: Does not belong here - extend vm.h to provide it
 static int constant_count = 0;
-
-static GvmState dummy_state[] = {
-	{ "snakes", LIT_SCAL(0), LIT_SCAL(5), VAL_SCALAR },
-	{ "badgers", LIT_VEC2(0, 0), LIT_VEC2(10, 20), VAL_VEC2 },
-	{ "dogs", LIT_VEC4(0, 0, 0, 0), LIT_VEC4(3, 3, 2, 2), VAL_VEC4 },
-	{ NULL, LIT_SCAL(0), LIT_SCAL(0), VAL_NONE },
-};
-
-static GvmState implicit_state[] = {
-	{ "Camera", LIT_VEC2(0, 0), LIT_VEC2(0, 0), VAL_VEC2 },
-	{ "Time", LIT_SCAL(0), LIT_SCAL(0), VAL_SCALAR },
-	{ "Pal0", LIT_SCAL(0), LIT_SCAL(0), VAL_SCALAR },
-};
-
-static void parse_error(const char *message)
-{
-	gvm_error("%s\n", message);
-}
-
-// TODO: Read a line from the source file and transform to state
-static GvmState consume_state()
-{
-	static int line = 0;
-	return dummy_state[line++];
-}
-
-static bool parse_state()
-{
-	// Read all state declared in source file
-	for (GvmState item = consume_state(); item.type != VAL_NONE; item = consume_state()) {
-		if (!insert_state(item, strlen(item.name))) {
-			parse_error("Failed to add state");
-			return false;
-		}
-	}
-
-	// Insert implicit state if not already set
-	for (int i = 0; i < sizeof(implicit_state) / sizeof(implicit_state[0]); ++i) {
-		GvmState implicit = implicit_state[i];
-		GvmState *explicit = get_state(implicit.name, strlen(implicit.name));
-		if (explicit != NULL) {
-			if (explicit->type != implicit.type) {
-				parse_error("State set with invalid type");
-				return false;
-			}
-		} else {
-			if (!insert_state(implicit, strlen(implicit.name))) {
-				parse_error("Failed to add state");
-				return false;
-			}
-		}
-	}
-
-	return true;
-}
 
 // TODO: Better to shape CcmRealloc like gvm_realloc()
 static void *ccm_realloc_wrapper(void *ptr, size_t size)
@@ -82,6 +28,49 @@ static void hook_number(double d)
 static void hook_string(const char *str, int length)
 {
 	gvm_log("STRING: %.*s\n", length, str);
+}
+
+static void hook_DEFINE_SCALAR(CcmList lists[])
+{
+	const char *name = lists[0].values[0].as.str.chars;
+	int length = lists[0].values[0].as.str.length;
+	GvmConstant value = SCAL(lists[1].values[0].as.number);
+	// TODO: Not bothered to error-check this because we should null-terminate
+	// CcmValue strings anyway
+	char *name_copy = gvm_malloc(length + 1);
+	memcpy(name_copy, name, length);
+	name_copy[length] = '\0';
+	define_state(value, name_copy);
+	gvm_free(name_copy);
+}
+
+static void hook_DEFINE_VEC2(CcmList lists[])
+{
+	const char *name = lists[0].values[0].as.str.chars;
+	int length = lists[0].values[0].as.str.length;
+	GvmConstant value = VEC2(lists[1].values[0].as.number, lists[2].values[0].as.number);
+	char *name_copy = gvm_malloc(length + 1);
+	memcpy(name_copy, name, length);
+	name_copy[length] = '\0';
+	define_state(value, name_copy);
+	gvm_free(name_copy);
+}
+
+static void hook_DEFINE_VEC4(CcmList lists[])
+{
+	const char *name = lists[0].values[0].as.str.chars;
+	int length = lists[0].values[0].as.str.length;
+	GvmConstant value = VEC4(
+		lists[1].values[0].as.number,
+		lists[2].values[0].as.number,
+		lists[3].values[0].as.number,
+		lists[4].values[0].as.number
+	);
+	char *name_copy = gvm_malloc(length + 1);
+	memcpy(name_copy, name, length);
+	name_copy[length] = '\0';
+	define_state(value, name_copy);
+	gvm_free(name_copy);
 }
 
 static void hook_ADD(CcmList *)
@@ -124,6 +113,9 @@ static bool parse_update_impl(const char *src, int src_length)
 	ccm_set_number_hook(hook_number);
 	ccm_set_string_hook(hook_string);
 
+	TRY(DEFINE_SCALAR, 2);
+	TRY(DEFINE_VEC2, 3);
+	TRY(DEFINE_VEC4, 5);
 	TRY(ADD, 0);
 	TRY(VEC2, 2);
 	TRY(FILL_RECT, 2);
@@ -171,7 +163,6 @@ bool parse(const char *rom_path)
 		return false;
 	}
 
-	TRY(parse_state());
 	TRY(parse_update(src, src_length));
 	TRY(parse_palettes());
 

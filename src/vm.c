@@ -5,33 +5,27 @@
 #include "memory.h"
 #include "subsystems/subsystems.h"
 
+#define VM_IMPL
+#include "vm_internals.h"
+
 #define INSTRUCTIONS_INITIAL_SIZE 256
 
 struct VM vm;
 
-// TODO: We may be able to get away without init() and close(): statically
-// allocate instructions at first, but grow them dynamically when needed...
-bool init_vm()
-{
-	vm.instructions = gvm_malloc(INSTRUCTIONS_INITIAL_SIZE);
-	vm.capacity = INSTRUCTIONS_INITIAL_SIZE;
-	vm.count = 0;
-	return (vm.instructions != NULL);
-}
-
-// TODO: ... then free() them if needed after run_vm()
-void close_vm()
-{
-	gvm_free(vm.instructions);
-}
+static GvmState auto_state[] = {
+	{ "Camera", LIT_VEC2(0, 0), LIT_VEC2(0, 0), VAL_VEC2 },
+	{ "Time", LIT_SCAL(0), LIT_SCAL(0), VAL_SCALAR },
+	{ "Pal0", LIT_SCAL(0), LIT_SCAL(0), VAL_SCALAR },
+};
 
 // Binary search for a named variable in VM's state list
 // If not found, index is where it should be inserted to maintain order
 static struct location {
 	bool found;
 	int index;
-} locate_state(const char *name, int length)
+} locate_state(const char *name)
 {
+	int length = strlen(name);
 	int low = 0;
 	int high = vm.state_count - 1;
 	int current = low + high / 2;
@@ -46,62 +40,6 @@ static struct location {
 		}
 	}
 	return (struct location){ false, low };
-}
-
-// Insert variable in state list, keeping it sorted by name
-// Returns true on successful insertion
-bool insert_state(GvmState item, int length)
-{
-	if (vm.state_count >= 256) {
-		return false;
-	}
-
-	struct location loc = locate_state(item.name, length);
-	if (loc.found) {
-		return false;
-	}
-
-	// Move all items one to the right
-	for (int i = vm.state_count; i > loc.index; --i) {
-		vm.state[i] = vm.state[i - 1];
-	}
-	vm.state[loc.index] = item;
-	++vm.state_count;
-	return true;
-}
-
-// Binary search for a named variable in VM's state list
-GvmState *get_state(const char *name, int length)
-{
-	struct location loc = locate_state(name, length);
-	if (loc.found) {
-		return &vm.state[loc.index];
-	} else {
-		return NULL;
-	}
-}
-
-bool instruction(uint8_t byte)
-{
-	if (vm.count >= vm.capacity) {
-		vm.instructions = gvm_realloc(vm.instructions, vm.capacity, 2 * vm.capacity);
-		if (!vm.instructions) {
-			return false;
-		}
-	}
-
-	vm.instructions[vm.count++] = byte;
-	return true;
-}
-
-bool constant(GvmConstant value)
-{
-	if (vm.constants_count >= 256) {
-		return false;
-	}
-
-	vm.constants[vm.constants_count++] = value;
-	return true;
 }
 
 static void runtime_error(const char *message)
@@ -259,6 +197,98 @@ static bool update()
 	return vm.had_error;
 }
 
+// TODO: We may be able to get away without init() and close(): statically
+// allocate instructions at first, but grow them dynamically when needed...
+bool init_vm()
+{
+	vm.instructions = gvm_malloc(INSTRUCTIONS_INITIAL_SIZE);
+	vm.capacity = INSTRUCTIONS_INITIAL_SIZE;
+	vm.count = 0;
+
+	if (vm.instructions == NULL) {
+		return false;
+	}
+
+	// Copy stack state to heap
+	for (int i = 0; i < sizeof(auto_state) / sizeof(auto_state[0]); ++i) {
+		GvmConstant constant = { auto_state[i].init, auto_state[i].type };
+		if (!define_state(constant, auto_state[i].name)) {
+			close_vm(); // TODO: careful if we change the implementation of close_vm()
+			return false;
+		}
+	}
+
+	return true;
+}
+
+// Insert variable in state list, keeping it sorted by name. Copies name to heap.
+// Returns true on successful insertion
+bool define_state(GvmConstant value, const char *name)
+{
+	if (vm.state_count >= 256) {
+		return false;
+	}
+
+	struct location loc = locate_state(name);
+	if (loc.found) {
+		return false;
+	}
+
+	int length = strlen(name);
+	char *own_name = gvm_malloc(length + 1);
+	if (NULL == own_name) {
+		return false;
+	}
+
+	memcpy(own_name, name, length);
+	own_name[length] = '\0';
+
+	// Move all items one to the right
+	for (int i = vm.state_count; i > loc.index; --i) {
+		vm.state[i] = vm.state[i - 1];
+	}
+
+	GvmState *state = &vm.state[loc.index];
+	state->name = own_name;
+	state->init = value.as;
+	state->current = value.as;
+	state->type = value.type;
+	++vm.state_count;
+	return true;
+}
+
+bool instruction(uint8_t byte)
+{
+	if (vm.count >= vm.capacity) {
+		vm.instructions = gvm_realloc(vm.instructions, vm.capacity, 2 * vm.capacity);
+		if (!vm.instructions) {
+			return false;
+		}
+	}
+
+	vm.instructions[vm.count++] = byte;
+	return true;
+}
+
+bool constant(GvmConstant value)
+{
+	if (vm.constants_count >= 256) {
+		return false;
+	}
+
+	vm.constants[vm.constants_count++] = value;
+	return true;
+}
+
+// TODO: ... then free() them if needed after run_vm()
+void close_vm()
+{
+	gvm_free(vm.instructions);
+	for (int i = 0; i < vm.state_count; ++i) {
+		gvm_free(vm.state[i].name);
+	}
+}
+
 // Return value: false if an error occurred preventing execution
 bool run_vm()
 {
@@ -270,5 +300,5 @@ bool run_vm()
 		draw(); // TODO: Unlink vsync from update logic
 		loop_done = loop_done || window_should_close();
 	}
-	return true;
+	return !vm.had_error;
 }

@@ -40,7 +40,7 @@ void input()
 }
 
 // Returns: success
-bool fill_rect(int x, int y, int w, int h, uint8_t palette, uint8_t colour);
+bool fill_rect(int x, int y, int w, int h, uint8_t palette, uint8_t colour)
 {
 	return fill_rect_impl(x, y, w, h, palette, colour);
 }
@@ -52,7 +52,7 @@ bool bind_palette(uint8_t bind_point, uint8_t target)
 }
 
 // Returns: success
-bool set_palette_colour(int palette, int colour, float r, float g, float b)
+bool set_palette_colour(uint8_t palette, uint8_t colour, float r, float g, float b)
 {
 	return set_palette_colour_impl(palette, colour, r, g, b);
 }

@@ -1,4 +1,10 @@
-UPDATE ; this is strictly unnecessary
+INIT UPDATE
+
+:INIT()
+	#DEFINE_SCALAR("snakes", 0)
+	#DEFINE_VEC2("badgers", 0, 0)
+	#DEFINE_VEC4("dogs", 0, 0, 0, 0)
+
 :UPDATE()
 	"aaaaaa   sdf" "" "asdf \a sdjf" "\\" "asdf \" asdf" "a a a \\\\\\\ \ "
 	+(3, 5)

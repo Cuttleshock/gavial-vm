@@ -12,8 +12,8 @@
 #define VEC2(x, y)             CONSTANT(LIT_VEC2(x, y), VAL_VEC2)
 #define VEC4(x, y, z, w)       CONSTANT(LIT_VEC4(x, y, z, w), VAL_VEC4)
 
-#define V2X(constant) (constant.as.vec2[0])
-#define V2Y(constant) (constant.as.vec2[1])
+#define V2X(constant) ((constant).as.vec2[0])
+#define V2Y(constant) ((constant).as.vec2[1])
 
 typedef enum {
 	VAL_SCALAR,
