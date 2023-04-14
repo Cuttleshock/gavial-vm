@@ -36,7 +36,7 @@ bool init_vm();
 bool run_vm();
 void close_vm();
 bool instruction(uint8_t byte);
-bool constant(GvmConstant value);
+int constant(GvmConstant value);
 bool define_state(GvmConstant value, const char *name);
 bool set_state(GvmConstant value, const char *name);
 

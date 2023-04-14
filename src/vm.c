@@ -270,14 +270,16 @@ bool instruction(uint8_t byte)
 	return true;
 }
 
-bool constant(GvmConstant value)
+// Adds a value to the constant table
+// Returns: its index (good for OP_LOAD_CONST), or -1 on failure
+int constant(GvmConstant value)
 {
 	if (vm.constants_count >= 256) {
-		return false;
+		return -1;
 	}
 
-	vm.constants[vm.constants_count++] = value;
-	return true;
+	vm.constants[vm.constants_count] = value;
+	return vm.constants_count++;
 }
 
 // TODO: ... then free() them if needed after run_vm()

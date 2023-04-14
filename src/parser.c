@@ -9,9 +9,6 @@
 #include "value.h"
 #include "vm.h"
 
-// TODO: Does not belong here - extend vm.h to provide it
-static int constant_count = 0;
-
 // TODO: Better to shape CcmRealloc like gvm_realloc()
 static void *ccm_realloc_wrapper(void *ptr, size_t size)
 {
@@ -20,9 +17,9 @@ static void *ccm_realloc_wrapper(void *ptr, size_t size)
 
 static void hook_number(double d)
 {
-	constant(SCAL(d));
+	uint8_t index = constant(SCAL(d));
 	instruction(OP_LOAD_CONST);
-	instruction(constant_count++);
+	instruction(index);
 }
 
 static void hook_string(const char *str, int length)
@@ -83,9 +80,9 @@ static void hook_VEC2(CcmList lists[])
 {
 	int a = lists[0].values[0].as.number;
 	int b = lists[1].values[0].as.number;
-	constant(VEC2(a, b));
+	uint8_t index = constant(VEC2(a, b)); // TODO: ... and error checking
 	instruction(OP_LOAD_CONST);
-	instruction(constant_count++);
+	instruction(index);
 }
 
 // TODO: Argument checking
@@ -130,7 +127,6 @@ static bool parse_update(const char *src, int src_length)
 {
 	bool success = parse_update_impl(src, src_length);
 	ccm_cleanup();
-	constant_count = 0;
 	return success;
 }
 
