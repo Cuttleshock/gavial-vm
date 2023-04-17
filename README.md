@@ -15,4 +15,4 @@ Ensure you have all dependencies, then `make` in the root.
 
 ## Licence
 
-External dependencies are described in deps/LICENSE.md. All other files are under the zlib licence.
+External dependencies are described in deps/LICENSE.md. All other files are dedicated to the public domain, described in UNLICENSE. If that causes you problems, get in touch and we'll see what we can do!
