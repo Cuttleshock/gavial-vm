@@ -3,11 +3,13 @@
 #define SUBSYSTEM_IMPL
 #include "renderer.h"
 
-// Pixel-to-screen conversion, set at initialisation
-int g_window_width = 1;
-int g_window_height = 1;
-#define NORM_X(x) (((GLfloat)(x)) / (g_window_width))
-#define NORM_Y(y) (((GLfloat)(y)) / (g_window_height))
+// Pixel-to-screen conversion, set at init
+GLfloat g_window_width = 1.0f;
+GLfloat g_window_height = 1.0f;
+#define PX_TO_SCALE_X(x) (2.0f * (GLfloat)(x) / g_window_width)
+#define PX_TO_SCALE_Y(y) (2.0f * (GLfloat)(y) / g_window_height)
+#define PX_TO_POS_X(x)   (PX_TO_SCALE_X(x) - 1.0f)
+#define PX_TO_POS_Y(y)   (PX_TO_SCALE_Y(y) - 1.0f)
 
 // Uniform block object locations
 enum {
@@ -206,8 +208,8 @@ bool init_renderer(int window_width, int window_height, GLADloadfunc opengl_load
 	if (window_width == 0 || window_height == 0) { // Negative values are fine
 		return false;
 	}
-	g_window_width = window_width;
-	g_window_height = window_height;
+	g_window_width = (GLfloat)window_width;
+	g_window_height = (GLfloat)window_height;
 
 	int version = gladLoadGL(opengl_loader);
 
@@ -350,7 +352,13 @@ bool fill_rect_impl(int x, int y, int w, int h, uint8_t palette, uint8_t colour)
 		return false;
 	}
 
-	rects[rect_count++] = (struct Rect){ { NORM_X(x), NORM_Y(y) }, { NORM_X(w), NORM_Y(h) }, palette, colour };
+	struct Rect *r = &rects[rect_count++];
+	r->position[0] = PX_TO_POS_X(x);
+	r->position[1] = PX_TO_POS_Y(y);
+	r->scale[0] = PX_TO_SCALE_X(w);
+	r->scale[1] = PX_TO_SCALE_Y(h);
+	r->palette = palette;
+	r->colour = colour;
 	return true;
 }
 
