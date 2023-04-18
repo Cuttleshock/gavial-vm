@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-bool init_subsystems();
+bool init_subsystems(int window_width, int window_height, const char *title);
 void input();
 bool bind_palette(uint8_t bind_point, uint8_t target);
 bool set_palette_colour(uint8_t palette, uint8_t colour, float r, float g, float b);

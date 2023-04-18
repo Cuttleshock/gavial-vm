@@ -13,19 +13,19 @@ static void glfw_error_callback(int error, const char *message)
 	gvm_error("GLFW E%4d: %s\n", error, message);
 }
 
-bool init_subsystems()
+bool init_subsystems(int window_width, int window_height, const char *title)
 {
 	glfwSetErrorCallback(glfw_error_callback);
 	if (!glfwInit()) {
 		return false;
 	}
 
-	if (!init_window()) {
+	if (!init_window(window_width, window_height, title)) {
 		glfwTerminate();
 		return false;
 	}
 
-	if (!init_renderer(glfwGetProcAddress)) {
+	if (!init_renderer(window_width, window_height, glfwGetProcAddress)) {
 		close_window();
 		glfwTerminate();
 		return false;

@@ -22,7 +22,7 @@ bool window_should_close_impl()
 	return glfwWindowShouldClose(window);
 }
 
-bool init_window()
+bool init_window(int window_width, int window_height, const char *title)
 {
 	// TODO: More error checking
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -30,7 +30,7 @@ bool init_window()
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-	window = glfwCreateWindow(512, 512, "Gavial VM", NULL, NULL); // TODO: magic numbers/string
+	window = glfwCreateWindow(window_width, window_height, title, NULL, NULL);
 	if (!window) {
 		return false;
 	}

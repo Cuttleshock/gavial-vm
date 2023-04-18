@@ -3,10 +3,11 @@
 #define SUBSYSTEM_IMPL
 #include "renderer.h"
 
-// Pixel-to-screen conversion
-// TODO: Demystify window size
-#define NORM_X(x) (((GLfloat)(x)) / 512)
-#define NORM_Y(y) (((GLfloat)(y)) / 512)
+// Pixel-to-screen conversion, set at initialisation
+int g_window_width = 1;
+int g_window_height = 1;
+#define NORM_X(x) (((GLfloat)(x)) / (g_window_width))
+#define NORM_Y(y) (((GLfloat)(y)) / (g_window_height))
 
 // Uniform block object locations
 enum {
@@ -199,9 +200,15 @@ static GLuint create_shader_program(int num_shaders, GLuint *shaders, int num_ou
 // Returns: success
 // TODO: Passing opengl_loader protects renderer.c from any GLFW logic but in
 // exchange leaks glad to the owner - fair trade?
-bool init_renderer(GLADloadfunc opengl_loader)
+bool init_renderer(int window_width, int window_height, GLADloadfunc opengl_loader)
 {
 	// TODO: Error checking
+	if (window_width == 0 || window_height == 0) { // Negative values are fine
+		return false;
+	}
+	g_window_width = window_width;
+	g_window_height = window_height;
+
 	int version = gladLoadGL(opengl_loader);
 
 	if (!have_gl_debug_output(version)) {
