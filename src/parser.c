@@ -141,7 +141,7 @@ static void hook_RETURN(CcmList *)
 	instruction(OP_RETURN);
 }
 
-static bool parse_update_impl(const char *src, int src_length)
+static bool parse_update_impl(const char *src, int src_length, const char *predef_src, int predef_length)
 {
 #define TRY(name, arg_count) \
 	if (!ccm_define_primitive(#name, sizeof(#name) - 1, arg_count, hook_ ## name)) return false;
@@ -164,6 +164,10 @@ static bool parse_update_impl(const char *src, int src_length)
 	TRY(FILL_RECT, 2);
 	TRY(RETURN, 0);
 
+	if (!ccm_compile(predef_src, predef_length)) {
+		return false;
+	}
+
 	return ccm_execute(src, src_length);
 
 #undef TRY
@@ -171,16 +175,26 @@ static bool parse_update_impl(const char *src, int src_length)
 
 static bool parse_update(const char *rom_path)
 {
+	// TODO: Not sure if keeping them in a file is necessary/helpful
+	int predef_length;
+	char *predef_src = read_file_executable("predefs.ccm", &predef_length);
+	if (NULL == predef_src) {
+		gvm_error("Could not read predefs.ccm: aborting\n");
+		return false;
+	}
+
 	int src_length;
 	char *src = read_file(rom_path, &src_length);
 	if (NULL == src) {
 		gvm_error("Could not read %s: aborting\n", rom_path);
+		gvm_free(predef_src);
 		return false;
 	}
 
-	bool success = parse_update_impl(src, src_length);
+	bool success = parse_update_impl(src, src_length, predef_src, predef_length);
 	ccm_cleanup();
 	gvm_free(src);
+	gvm_free(predef_src);
 	return success;
 }
 
