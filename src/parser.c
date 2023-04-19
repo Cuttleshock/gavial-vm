@@ -106,6 +106,11 @@ static void hook_ADD(CcmList *)
 	instruction(OP_ADD);
 }
 
+static void hook_SUBTRACT(CcmList *)
+{
+	instruction(OP_SUBTRACT);
+}
+
 // TODO: Argument checking
 static void hook_VEC2(CcmList lists[])
 {
@@ -152,6 +157,7 @@ static bool parse_update_impl(const char *src, int src_length)
 	TRY(DEFINE_VEC4, 5);
 	TRY(SET, 1);
 	TRY(ADD, 0);
+	TRY(SUBTRACT, 0);
 	TRY(MODULO, 0);
 	TRY(VEC2, 2);
 	TRY(MAKE_VEC2, 0);
