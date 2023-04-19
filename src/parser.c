@@ -10,7 +10,7 @@
 #include "vm.h"
 
 // TODO: Better to shape CcmRealloc like gvm_realloc()
-static void *ccm_realloc_wrapper(void *ptr, size_t size)
+static void *gvm_ccm_realloc_wrapper(void *ptr, size_t size)
 {
 	return gvm_realloc(ptr, 0, size);
 }
@@ -147,7 +147,7 @@ static bool parse_update_impl(const char *src, int src_length)
 	if (!ccm_define_primitive(#name, sizeof(#name) - 1, arg_count, hook_ ## name)) return false;
 
 	ccm_set_logger(gvm_error);
-	ccm_set_allocators(gvm_malloc, ccm_realloc_wrapper, gvm_free);
+	ccm_set_allocators(gvm_malloc, gvm_ccm_realloc_wrapper, gvm_free);
 	ccm_set_number_hook(hook_number);
 	ccm_set_string_hook(hook_string);
 	ccm_set_symbol_hook(hook_symbol);
