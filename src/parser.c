@@ -169,10 +169,18 @@ static bool parse_update_impl(const char *src, int src_length)
 #undef TRY
 }
 
-static bool parse_update(const char *src, int src_length)
+static bool parse_update(const char *rom_path)
 {
+	int src_length;
+	char *src = read_file(rom_path, &src_length);
+	if (NULL == src) {
+		gvm_error("Could not read %s: aborting\n", rom_path);
+		return false;
+	}
+
 	bool success = parse_update_impl(src, src_length);
 	ccm_cleanup();
+	gvm_free(src);
 	return success;
 }
 
@@ -198,17 +206,8 @@ bool parse(const char *rom_path)
 {
 #define TRY(p) if (!p) return false;
 
-	int src_length;
-	char *src = read_file(rom_path, &src_length);
-	if (NULL == src) {
-		gvm_error("Could not read file: aborting\n");
-		return false;
-	}
-
-	TRY(parse_update(src, src_length));
+	TRY(parse_update(rom_path));
 	TRY(parse_palettes());
-
-	gvm_free(src);
 
 	return true;
 
