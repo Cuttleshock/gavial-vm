@@ -19,7 +19,8 @@ typedef enum {
 	OP_GET_Y,
 	OP_MAKE_VEC2,
 	// Control flow
-	OP_IF,
+	OP_JUMP_IF_FALSE,
+	OP_JUMP,
 	// Booleans
 	OP_LESS_THAN,
 	OP_GREATER_THAN,
@@ -40,6 +41,8 @@ bool init_vm();
 bool run_vm();
 void close_vm();
 bool instruction(uint8_t byte);
+bool jump(uint8_t byte, uint32_t *out_index);
+bool resolve_jump(uint32_t index);
 bool constant(GvmConstant value);
 bool locate_state(const char *name, int name_length, int *index);
 bool define_state(GvmConstant value, const char *name);

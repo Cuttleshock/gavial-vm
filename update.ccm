@@ -6,10 +6,16 @@ INIT UPDATE
 	#DEFINE_VEC2(`rect_position, 0, 200)
 
 :UPDATE()
-	ADD_X(`rect_scale, #PRESSED(BUTTON_A))
-	ADD_Y(`rect_scale, #PRESSED(BUTTON_B))
-	ADD_X(`rect_position, #PRESSED(BUTTON_RIGHT))
-	ADD_Y(`rect_position, #PRESSED(BUTTON_UP))
+	IF(#PRESSED(BUTTON_UP),
+		ADD_Y(`rect_position, 1),
+		IF(#PRESSED(BUTTON_DOWN),
+			ADD_Y(`rect_position, -1), ))
+
+	IF(#PRESSED(BUTTON_RIGHT),
+		ADD_X(`rect_position, 1),
+		IF(#PRESSED(BUTTON_LEFT),
+			ADD_X(`rect_position, -1), ))
+
 	RECT(`rect_position, `rect_scale)(1, 1)
 	CONST_RECT(BUTTON_UP, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT)(0, 2)
 	RECT(

@@ -63,23 +63,25 @@ static void push(GvmConstant val)
 // Return value: true if should quit
 static bool update()
 {
+#define BYTE() (vm.instructions[i++])
+
 	vm.stack_count = 0;
 
-	for (int i = 0; i < vm.count && !vm.had_error; ++i) {
-		switch (vm.instructions[i]) {
+	for (uint32_t i = 0; i < vm.count && !vm.had_error; ) {
+		switch (BYTE()) {
 			case OP_SET: {
-				uint8_t index = vm.instructions[++i];
+				uint8_t index = BYTE();
 				GvmConstant val = pop();
 				vm.state[index].current = val.as;
 				break;
 			}
 			case OP_GET: {
-				uint8_t index = vm.instructions[++i];
+				uint8_t index = BYTE();
 				push((GvmConstant){ vm.state[index].current, vm.state[index].type });
 				break;
 			}
 			case OP_LOAD_CONST: {
-				uint8_t index = vm.instructions[++i];
+				uint8_t index = BYTE();
 				push(vm.constants[index]);
 				break;
 			}
@@ -114,9 +116,21 @@ static bool update()
 				GvmConstant x = peek();
 				modify(VEC2(x.as.scalar, y.as.scalar));
 				break;
-			case OP_IF: // TODO
-				runtime_error("OP_IF: Unimplemented");
+			case OP_JUMP_IF_FALSE: {
+				GvmConstant condition = pop();
+				uint32_t *target = (uint32_t *)&vm.instructions[i];
+				if (!condition.as.scalar) {
+					i = *target;
+				} else {
+					i += sizeof(*target);
+				}
 				break;
+			}
+			case OP_JUMP: {
+				uint32_t *target = (uint32_t *)&vm.instructions[i];
+				i = *target;
+				break;
+			}
 			case OP_LESS_THAN: {
 				GvmConstant b = pop();
 				GvmConstant a = peek();
@@ -132,15 +146,15 @@ static bool update()
 				break;
 			}
 			case OP_BUTTON_PRESSED:
-				if (button_pressed(vm.instructions[++i])) {
+				if (button_pressed(BYTE())) {
 					push(SCAL(1));
 				} else {
 					push(SCAL(0));
 				}
 				break;
 			case OP_LOAD_PAL: {
-				uint8_t bind_point = vm.instructions[++i];
-				uint8_t target = vm.instructions[++i];
+				uint8_t bind_point = BYTE();
+				uint8_t target = BYTE();
 				if (!bind_palette(bind_point, target)) {
 					// TODO: This should be statically checkable
 					runtime_error("Failed to load palette");
@@ -148,8 +162,8 @@ static bool update()
 				break;
 			}
 			case OP_FILL_RECT: {
-				uint8_t palette = vm.instructions[++i];
-				uint8_t colour = vm.instructions[++i];
+				uint8_t palette = BYTE();
+				uint8_t colour = BYTE();
 				GvmConstant scale = pop();
 				GvmConstant position = pop();
 				if (!fill_rect(V2X(position), V2Y(position), V2X(scale), V2Y(scale), palette, colour)) {
@@ -183,6 +197,8 @@ static bool update()
 	}
 
 	return vm.had_error;
+
+#undef BYTE
 }
 
 // TODO: We may be able to get away without init() and close(): statically
@@ -268,6 +284,36 @@ bool instruction(uint8_t byte)
 	}
 
 	vm.instructions[vm.count++] = byte;
+	return true;
+}
+
+// Returns: success. On success, out_index is a valid argument for resolve_jump().
+// TODO: May be better to explicitly bit-shift to form jumps, or even to give
+// them a dedicated separate array - not nice to read misaligned int32s
+bool jump(uint8_t byte, uint32_t *out_index)
+{
+#define TRY(op) if (!instruction(op)) return false
+
+	TRY(byte);
+	*out_index = vm.count;
+	// (Carefully) leave four bytes for resolved operand
+	TRY(0);
+	TRY(0);
+	TRY(0);
+	TRY(0);
+	return true;
+
+#undef TRY
+}
+
+bool resolve_jump(uint32_t index)
+{
+	if (index >= vm.count) {
+		return false;
+	}
+
+	uint32_t *target = (uint32_t *)&vm.instructions[index];
+	*target = vm.count;
 	return true;
 }
 

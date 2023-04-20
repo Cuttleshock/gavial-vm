@@ -9,6 +9,10 @@
 #include "value.h"
 #include "vm.h"
 
+// Stack of instruction indices of unresolved jumps
+static uint32_t jump_stack[256];
+static int jump_count = 0;
+
 // TODO: Better to shape CcmRealloc like gvm_realloc()
 static void *gvm_ccm_realloc_wrapper(void *ptr, size_t size)
 {
@@ -132,6 +136,36 @@ static void hook_GET_Y(CcmList lists[])
 	instruction(OP_GET_Y);
 }
 
+static void hook_JUMP_IF_FALSE(CcmList[])
+{
+	if (jump_count >= sizeof(jump_stack) / sizeof(jump_stack[0])) {
+		ccm_runtime_error("Too deeply nested control flow");
+	} else {
+		jump(OP_JUMP_IF_FALSE, &jump_stack[jump_count++]);
+	}
+}
+
+static void hook_JUMP_AND_POP(CcmList[])
+{
+	if (jump_count == 0) {
+		ccm_runtime_error("Attempt to resolve nonexistent jump");
+	} else {
+		uint32_t new_jump;
+		jump(OP_JUMP, &new_jump);
+		resolve_jump(jump_stack[jump_count - 1]);
+		jump_stack[jump_count - 1] = new_jump;
+	}
+}
+
+static void hook_POP_JUMP(CcmList[])
+{
+	if (jump_count == 0) {
+		ccm_runtime_error("Attempt to resolve nonexistent jump");
+	} else {
+		resolve_jump(jump_stack[--jump_count]);
+	}
+}
+
 static void hook_PRESSED(CcmList lists[])
 {
 	int button = lists[0].values[0].as.number;
@@ -157,7 +191,7 @@ static void hook_RETURN(CcmList *)
 static bool parse_update_impl(const char *src, int src_length, const char *predef_src, int predef_length)
 {
 #define TRY(name, arg_count) \
-	if (!ccm_define_primitive(#name, sizeof(#name) - 1, arg_count, hook_ ## name)) return false;
+	if (!ccm_define_primitive(#name, sizeof(#name) - 1, arg_count, hook_ ## name)) return false
 
 	ccm_set_logger(gvm_error);
 	ccm_set_allocators(gvm_malloc, gvm_ccm_realloc_wrapper, gvm_free);
@@ -177,6 +211,9 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(MAKE_VEC2, 0);
 	TRY(GET_X, 0);
 	TRY(GET_Y, 0);
+	TRY(JUMP_IF_FALSE, 0);
+	TRY(JUMP_AND_POP, 0);
+	TRY(POP_JUMP, 0);
 	TRY(FILL_RECT, 2);
 	TRY(RETURN, 0);
 

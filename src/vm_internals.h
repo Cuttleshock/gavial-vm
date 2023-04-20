@@ -14,14 +14,14 @@ typedef struct {
 
 extern struct VM {
 	uint8_t *instructions;
-	size_t capacity;
-	size_t count;
+	uint32_t capacity;
+	uint32_t count;
 	GvmState state[256];
-	size_t state_count;
+	uint32_t state_count;
 	GvmConstant stack[256];
-	size_t stack_count;
+	uint32_t stack_count;
 	GvmConstant constants[256];
-	size_t constants_count;
+	uint32_t constants_count;
 	bool had_error;
 } vm;
 
