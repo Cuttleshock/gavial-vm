@@ -1,11 +1,16 @@
 INIT UPDATE
 
 :INIT()
-	#DEFINE_SCALAR("snakes", 0)
-	#DEFINE_VEC2("badgers", 100, 200)
-	#DEFINE_VEC4("dogs", 0, 0, 0, 0)
+	#DEFINE_VEC2(`badgers, 100, 200)
+	#DEFINE_VEC2(`rect_scale, 50, 50)
+	#DEFINE_VEC2(`rect_position, 0, 200)
 
 :UPDATE()
+	ADD_X(`rect_scale, #PRESSED(BUTTON_A))
+	ADD_Y(`rect_scale, #PRESSED(BUTTON_B))
+	ADD_X(`rect_position, #PRESSED(BUTTON_RIGHT))
+	ADD_Y(`rect_position, #PRESSED(BUTTON_UP))
+	RECT(`rect_position, `rect_scale)(1, 1)
 	CONST_RECT(BUTTON_UP, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT)(0, 2)
 	RECT(
 		_(%(`Time, +(SCREEN_WIDTH, 50)), 50) 300 #MAKE_VEC2,
@@ -23,4 +28,5 @@ INIT UPDATE
 :%(?a, ?b) ?a ?b #MODULO
 :CONST_RECT(?x, ?y, ?w, ?h) V2(?x, ?y) V2(?w, ?h) #FILL_RECT
 :RECT(?loc, ?size) ?loc ?size #FILL_RECT
-:SCREEN_WIDTH() 512
+:ADD_X(?state, ?x) +(?state #GET_X, ?x) ?state #GET_Y #MAKE_VEC2 #SET(?state)
+:ADD_Y(?state, ?y) ?state #GET_X +(?state #GET_Y, ?y) #MAKE_VEC2 #SET(?state)

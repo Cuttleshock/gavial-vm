@@ -15,7 +15,6 @@ struct VM vm;
 static GvmState auto_state[] = {
 	{ "Camera", LIT_VEC2(0, 0), LIT_VEC2(0, 0), VAL_VEC2 },
 	{ "Time", LIT_SCAL(0), LIT_SCAL(0), VAL_SCALAR },
-	{ "Pal0", LIT_SCAL(0), LIT_SCAL(0), VAL_SCALAR },
 };
 
 static void runtime_error(const char *message)
@@ -137,6 +136,13 @@ static bool update()
 				modify(result);
 				continue;
 			}
+			case OP_BUTTON_PRESSED:
+				if (button_pressed(vm.instructions[++i])) {
+					push(SCAL(1));
+				} else {
+					push(SCAL(0));
+				}
+				continue;
 			case OP_LOAD_PAL: {
 				uint8_t bind_point = vm.instructions[++i];
 				uint8_t target = vm.instructions[++i];

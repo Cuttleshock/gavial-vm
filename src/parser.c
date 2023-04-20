@@ -126,6 +126,23 @@ static void hook_MAKE_VEC2(CcmList lists[])
 	instruction(OP_MAKE_VEC2);
 }
 
+static void hook_GET_X(CcmList lists[])
+{
+	instruction(OP_GET_X);
+}
+
+static void hook_GET_Y(CcmList lists[])
+{
+	instruction(OP_GET_Y);
+}
+
+static void hook_PRESSED(CcmList lists[])
+{
+	int button = lists[0].values[0].as.number;
+	instruction(OP_BUTTON_PRESSED);
+	instruction(button);
+}
+
 // TODO: Argument checking
 static void hook_FILL_RECT(CcmList lists[])
 {
@@ -160,7 +177,10 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(SUBTRACT, 0);
 	TRY(MODULO, 0);
 	TRY(VEC2, 2);
+	TRY(PRESSED, 1);
 	TRY(MAKE_VEC2, 0);
+	TRY(GET_X, 0);
+	TRY(GET_Y, 0);
 	TRY(FILL_RECT, 2);
 	TRY(RETURN, 0);
 

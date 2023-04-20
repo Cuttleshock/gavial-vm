@@ -23,6 +23,8 @@ typedef enum {
 	// Booleans
 	OP_LESS_THAN,
 	OP_GREATER_THAN,
+	// Input
+	OP_BUTTON_PRESSED,
 	// Drawing
 	OP_LOAD_PAL,
 	OP_FILL_RECT,
