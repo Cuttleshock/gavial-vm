@@ -317,9 +317,10 @@ bool run_vm()
 	locate_state("Time", 4, &time_index);
 
 	while (!loop_done) {
-		input();
+		// TODO: lock_input()?
 		++vm.state[time_index].current.scalar;
 		loop_done = update();
+		input();
 		draw(); // TODO: Unlink vsync from update logic
 		loop_done = loop_done || window_should_close();
 	}
