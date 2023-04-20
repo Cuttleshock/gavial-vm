@@ -257,11 +257,12 @@ bool define_state(GvmConstant value, const char *name)
 	return true;
 }
 
+// Returns: success
 bool instruction(uint8_t byte)
 {
 	if (vm.count >= vm.capacity) {
 		vm.instructions = gvm_realloc(vm.instructions, vm.capacity, 2 * vm.capacity);
-		if (!vm.instructions) {
+		if (NULL == vm.instructions) {
 			return false;
 		}
 	}
@@ -270,19 +271,23 @@ bool instruction(uint8_t byte)
 	return true;
 }
 
-// Adds a value to the constant table
-// Returns: its index (good for OP_LOAD_CONST), or -1 on failure
-int constant(GvmConstant value)
+// Adds a value to the constant table and emits instruction to load it
+// Returns: success
+bool constant(GvmConstant value)
 {
 	if (vm.constants_count >= 256) {
-		return -1;
+		return false;
+	}
+
+	if (!instruction(OP_LOAD_CONST)) {
+		return false;
 	}
 
 	vm.constants[vm.constants_count] = value;
-	return vm.constants_count++;
+	return instruction(vm.constants_count++);
 }
 
-// TODO: ... then free() them if needed after run_vm()
+// TODO: See init_vm() - then free() after run_vm()
 void close_vm()
 {
 	gvm_free(vm.instructions);

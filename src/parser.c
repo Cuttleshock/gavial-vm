@@ -17,9 +17,7 @@ static void *gvm_ccm_realloc_wrapper(void *ptr, size_t size)
 
 static void hook_number(double d)
 {
-	uint8_t index = constant(SCAL(d));
-	instruction(OP_LOAD_CONST);
-	instruction(index);
+	constant(SCAL(d));
 }
 
 static void hook_string(const char *str, int length)
@@ -116,9 +114,7 @@ static void hook_VEC2(CcmList lists[])
 {
 	int a = lists[0].values[0].as.number;
 	int b = lists[1].values[0].as.number;
-	uint8_t index = constant(VEC2(a, b)); // TODO: ... and error checking
-	instruction(OP_LOAD_CONST);
-	instruction(index);
+	constant(VEC2(a, b)); // TODO: ... and error checking
 }
 
 static void hook_MAKE_VEC2(CcmList lists[])
