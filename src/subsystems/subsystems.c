@@ -39,6 +39,11 @@ void input()
 	input_impl();
 }
 
+bool button_pressed(int button)
+{
+	return button_pressed_impl(button);
+}
+
 // Returns: success
 bool fill_rect(int x, int y, int w, int h, uint8_t palette, uint8_t colour)
 {

@@ -4,16 +4,69 @@
 #define SUBSYSTEM_IMPL
 #include "window.h"
 
+typedef enum {
+	BUTTON_A,
+	BUTTON_B,
+	BUTTON_C,
+	BUTTON_UP,
+	BUTTON_DOWN,
+	BUTTON_LEFT,
+	BUTTON_RIGHT,
+	BUTTON_START,
+	BUTTON_MAX,
+} Button;
+
+#define MAP(gvm, glfw) { 1, { GLFW_KEY_ ## glfw } }
+
+// TODO: It's inefficient at runtime but more intuitive logically - trade-off?
+static struct {
+	int count;
+	int glfw_key[16];
+} key_mappings[BUTTON_MAX] = {
+	MAP(A, Z),
+	MAP(B, X),
+	MAP(C, C),
+	MAP(UP, UP),
+	MAP(DOWN, DOWN),
+	MAP(LEFT, LEFT),
+	MAP(RIGHT, RIGHT),
+	MAP(START, ENTER),
+};
+
+#undef MAP
+
+static bool button_initial_press[BUTTON_MAX];
+static bool button_latest_press[BUTTON_MAX];
+
 static GLFWwindow *window = NULL;
+
+static bool key_registered_to(int glfw_key, Button button)
+{
+	for (int j = 0; j < key_mappings[button].count; ++j) {
+		if (key_mappings[button].glfw_key[j] == glfw_key) {
+			return true;
+		}
+	}
+
+	return false;
+}
 
 static void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
-	switch (key) {
-		case GLFW_KEY_ESCAPE:
-			glfwSetWindowShouldClose(window, GLFW_TRUE);
-			break;
-		default:
-			break;
+	if (key == GLFW_KEY_ESCAPE) {
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+		return;
+	}
+
+	for (Button button = 0; button < BUTTON_MAX; ++button) {
+		if (key_registered_to(key, button)) {
+			// Awkward dance to account for GLFW_REPEAT
+			if (action == GLFW_RELEASE && button_initial_press[button]) {
+				button_latest_press[button] = false;
+			} else if (!button_initial_press[button]) {
+				button_latest_press[button] = true;
+			}
+		}
 	}
 }
 
@@ -38,12 +91,38 @@ bool init_window(int window_width, int window_height, const char *title)
 	glfwSetKeyCallback(window, glfw_key_callback);
 	glfwSwapInterval(1);
 
+	for (int i = 0; i < BUTTON_MAX; ++i) {
+		button_initial_press[i] = false;
+		button_latest_press[i] = false;
+	}
+
 	return true;
+}
+
+bool button_pressed_impl(int button)
+{
+	if (button < 0 || button >= BUTTON_MAX) {
+		gvm_error("Invalid button index: %d\n", button);
+		return false;
+	}
+
+	return button_latest_press[button];
 }
 
 void input_impl()
 {
 	glfwPollEvents();
+
+	for (int i = 0; i < BUTTON_MAX; ++i) {
+		button_initial_press[i] = false;
+		for (int j = 0; j < key_mappings[i].count; ++j) {
+			int state = glfwGetKey(window, key_mappings[i].glfw_key[j]);
+			if (state == GLFW_PRESS) {
+				button_initial_press[i] = true;
+				break;
+			}
+		}
+	}
 }
 
 void swap_buffers()
