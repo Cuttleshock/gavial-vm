@@ -12,11 +12,6 @@
 
 struct VM vm;
 
-static GvmState auto_state[] = {
-	{ "Camera", LIT_VEC2(0, 0), LIT_VEC2(0, 0), VAL_VEC2 },
-	{ "Time", LIT_SCAL(0), LIT_SCAL(0), VAL_SCALAR },
-};
-
 static void runtime_error(const char *message)
 {
 	if (!vm.had_error) {
@@ -194,24 +189,11 @@ static bool update()
 // allocate instructions at first, but grow them dynamically when needed...
 bool init_vm()
 {
-	vm.instructions = gvm_malloc(INSTRUCTIONS_INITIAL_SIZE);
 	vm.capacity = INSTRUCTIONS_INITIAL_SIZE;
+	vm.instructions = gvm_malloc(vm.capacity);
 	vm.count = 0;
 
-	if (vm.instructions == NULL) {
-		return false;
-	}
-
-	// Copy stack state to heap
-	for (int i = 0; i < sizeof(auto_state) / sizeof(auto_state[0]); ++i) {
-		GvmConstant constant = { auto_state[i].init, auto_state[i].type };
-		if (!define_state(constant, auto_state[i].name)) {
-			close_vm(); // TODO: careful if we change the implementation of close_vm()
-			return false;
-		}
-	}
-
-	return true;
+	return vm.instructions != NULL;
 }
 
 // Return value: true if named state is defined

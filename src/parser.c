@@ -184,7 +184,7 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(FILL_RECT, 2);
 	TRY(RETURN, 0);
 
-	if (!ccm_compile(predef_src, predef_length)) {
+	if (!ccm_execute(predef_src, predef_length)) {
 		return false;
 	}
 
