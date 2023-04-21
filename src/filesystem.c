@@ -38,6 +38,12 @@ static bool make_absolute_path(const char *relative, char *out_buf, size_t bufsi
 
 static char *read_file_impl(const char *absolute, int *out_length)
 {
+	// Check that it's an actual file
+	struct stat out_stat;
+	if (stat(absolute, &out_stat) == -1 || !S_ISREG(out_stat.st_mode)) {
+		return NULL;
+	}
+
 	// Open file
 	FILE *file = fopen(absolute, "r");
 	if (file == NULL) {
