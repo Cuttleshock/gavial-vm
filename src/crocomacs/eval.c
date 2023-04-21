@@ -299,6 +299,7 @@ void runtime_error(const char *message)
 
 bool eval_macro(const char *name, int name_length)
 {
+	// TODO: Why not make a synthetic Sentence?
 	int arg_count;
 	Sentence *top = expand_macro(name, name_length, &arg_count);
 	if (top == NULL || arg_count != 0) {

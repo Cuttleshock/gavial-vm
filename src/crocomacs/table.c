@@ -65,6 +65,7 @@ static void print_word(Word *w)
 			ccm_log("?%d", w->as.arg_index);
 			return;
 		case WORD_CALL:
+			// Calls always have at least 1 arg
 			ccm_log("(");
 			for (int i = 0; i < w->as.call.arg_count - 1; ++i) {
 				print_sentence(&w->as.call.args[i]);
@@ -78,6 +79,10 @@ static void print_word(Word *w)
 
 static void print_sentence(Sentence *s)
 {
+	if (s->word_count == 0) {
+		return;
+	}
+
 	for (int i = 0; i < s->word_count - 1; ++i) {
 		print_word(&s->words[i]);
 		ccm_log(" ");
