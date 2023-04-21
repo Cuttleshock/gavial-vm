@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 
 	gvm_log("Welcome to Gavial VM!\n");
 
-	if(!init_subsystems(WINDOW_WIDTH, WINDOW_HEIGHT, "Gavial VM")) {
+	if(!init_subsystems(WINDOW_WIDTH, WINDOW_HEIGHT, "Gavial VM", load_save)) {
 		return EXIT_FAILURE;
 	}
 

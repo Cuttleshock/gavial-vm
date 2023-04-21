@@ -280,3 +280,8 @@ bool parse(const char *rom_path)
 
 #undef TRY
 }
+
+void load_save(const char *path)
+{
+	gvm_log("Loading save %s...\n", path);
+}
