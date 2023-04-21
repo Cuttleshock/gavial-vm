@@ -4,6 +4,7 @@
 #include "filesystem.h"
 #include "vm.h"
 #include "memory.h"
+#include "parser.h"
 #include "subsystems/subsystems.h"
 
 #define VM_IMPL
@@ -202,10 +203,13 @@ static bool update()
 #undef BYTE
 }
 
-// TODO: We may be able to get away without init() and close(): statically
-// allocate instructions at first, but grow them dynamically when needed...
 bool init_vm()
 {
+	vm.state_count = 0;
+	vm.stack_count = 0;
+	vm.constants_count = 0;
+	vm.had_error = false;
+
 	vm.capacity = INSTRUCTIONS_INITIAL_SIZE;
 	vm.instructions = gvm_malloc(vm.capacity);
 	vm.count = 0;
@@ -271,6 +275,7 @@ bool define_state(GvmConstant value, const char *name)
 	state->current = value.as;
 	state->type = value.type;
 	++vm.state_count;
+
 	return true;
 }
 
@@ -334,7 +339,6 @@ bool constant(GvmConstant value)
 	return instruction(vm.constants_count++);
 }
 
-// TODO: See init_vm() - then free() after run_vm()
 void close_vm()
 {
 	gvm_free(vm.instructions);
@@ -364,7 +368,28 @@ bool run_vm(const char *rom_path)
 			} else if (new_timestamp != rom_timestamp) {
 				gvm_log("ROM %s modified: reparsing\n", rom_path);
 				rom_timestamp = new_timestamp;
-				// TODO: re-parse
+				struct VM old_vm = vm;
+				init_vm();
+				if (!parse(rom_path)) {
+					gvm_error("Error parsing updated ROM %s\n", rom_path);
+					close_vm();
+					vm = old_vm;
+				} else {
+					locate_state("Time", 4, &time_index);
+					struct VM new_vm = vm;
+					vm = old_vm;
+					for (int i = 0; i < new_vm.state_count; ++i) {
+						int index;
+						const char *name = new_vm.state[i].name;
+						if (locate_state(name, strlen(name), &index)) {
+							if (vm.state[index].type == new_vm.state[i].type) {
+								new_vm.state[i].current = vm.state[index].current;
+							}
+						}
+					}
+					close_vm();
+					vm = new_vm;
+				}
 				input();
 			}
 		}
