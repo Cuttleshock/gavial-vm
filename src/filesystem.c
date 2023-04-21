@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "filesystem.h"
@@ -72,6 +73,17 @@ static char *read_file_impl(const char *absolute, int *out_length)
 		*out_length = fsize;
 	}
 	return buffer;
+}
+
+// Returns: last modification timestamp, or MODIFY_ERROR on error
+time_t last_modified(const char *path)
+{
+	struct stat out_stat;
+	if (stat(path, &out_stat) == -1) {
+		return MODIFY_ERROR;
+	}
+
+	return out_stat.st_mtime;
 }
 
 // Opens path relative to cwd and reads to a buffer

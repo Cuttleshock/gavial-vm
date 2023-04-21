@@ -38,7 +38,7 @@ typedef enum {
 } OpCode;
 
 bool init_vm();
-bool run_vm();
+bool run_vm(const char *rom_path);
 void close_vm();
 bool instruction(uint8_t byte);
 bool jump(uint8_t byte, uint32_t *out_index);

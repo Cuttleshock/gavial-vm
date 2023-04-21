@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	disassemble();
 #endif
 
-	bool success = run_vm();
+	bool success = run_vm(rom_path);
 	close_vm();
 	close_subsystems();
 	return success ? EXIT_SUCCESS : EXIT_FAILURE;

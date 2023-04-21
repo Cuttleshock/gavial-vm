@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "filesystem.h"
 #include "vm.h"
 #include "memory.h"
 #include "subsystems/subsystems.h"
@@ -343,13 +344,32 @@ void close_vm()
 }
 
 // Return value: false if an error occurred preventing execution
-bool run_vm()
+bool run_vm(const char *rom_path)
 {
+	time_t rom_timestamp = last_modified(rom_path);
+	if (rom_timestamp == MODIFY_ERROR) {
+		gvm_error("Cannot watch ROM %s for updates\n", rom_path);
+	}
 	bool loop_done = false;
 	int time_index; // TODO: very careful
 	locate_state("Time", 4, &time_index);
 
 	while (!loop_done) {
+		// Re-parse ROM if appropriate
+		if (rom_timestamp != MODIFY_ERROR) {
+			time_t new_timestamp = last_modified(rom_path);
+			if (new_timestamp == MODIFY_ERROR) {
+				gvm_error("Cannot watch ROM %s for updates\n", rom_path);
+				rom_timestamp = new_timestamp;
+			} else if (new_timestamp != rom_timestamp) {
+				gvm_log("ROM %s modified: reparsing\n", rom_path);
+				rom_timestamp = new_timestamp;
+				// TODO: re-parse
+				input();
+			}
+		}
+
+		// Run VM loop
 		// TODO: lock_input()?
 		++vm.state[time_index].current.scalar;
 		loop_done = update();
