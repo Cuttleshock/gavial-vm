@@ -298,6 +298,21 @@ bool define_state(GvmConstant value, const char *name)
 }
 
 // Returns: success
+bool set_state(GvmConstant value, const char *name, int length)
+{
+	int index;
+	bool found = locate_state(name, length, &index);
+	if (!found) {
+		return false;
+	} else if (vm.state[index].type != value.type) {
+		return false;
+	} else {
+		vm.state[index].current = value.as;
+		return true;
+	}
+}
+
+// Returns: success
 bool instruction(uint8_t byte)
 {
 	if (vm.count >= vm.capacity) {
@@ -414,7 +429,10 @@ bool run_vm(const char *rom_path)
 
 		// Check for queued load
 		if (NULL != queued_save_path) {
-			load_save(queued_save_path);
+			gvm_log("Loading save %s...\n", queued_save_path);
+			if (!load_save(queued_save_path)) {
+				gvm_error("Error loading save file\n");
+			}
 			gvm_free(queued_save_path);
 			queued_save_path = NULL;
 			// TODO: Freeze to aid in buffered input

@@ -41,12 +41,12 @@ bool init_vm();
 bool queue_save(const char *path);
 bool run_vm(const char *rom_path);
 void close_vm();
+bool set_state(GvmConstant value, const char *name, int length);
 bool instruction(uint8_t byte);
 bool jump(uint8_t byte, uint32_t *out_index);
 bool resolve_jump(uint32_t index);
 bool constant(GvmConstant value);
 bool locate_state(const char *name, int name_length, int *index);
 bool define_state(GvmConstant value, const char *name);
-bool set_state(GvmConstant value, const char *name);
 
 #endif // VM_H

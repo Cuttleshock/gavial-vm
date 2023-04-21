@@ -188,6 +188,34 @@ static void hook_RETURN(CcmList *)
 	instruction(OP_RETURN);
 }
 
+static void save_hook_LOAD_SCALAR(CcmList lists[])
+{
+	const char *name = lists[0].values[0].as.str.chars;
+	int length = lists[0].values[0].as.str.length;
+	int scalar = lists[1].values[0].as.number;
+	set_state(SCAL(scalar), name, length);
+}
+
+static void save_hook_LOAD_VEC2(CcmList lists[])
+{
+	const char *name = lists[0].values[0].as.str.chars;
+	int length = lists[0].values[0].as.str.length;
+	int x = lists[1].values[0].as.number;
+	int y = lists[2].values[0].as.number;
+	set_state(VEC2(x, y), name, length);
+}
+
+static void save_hook_LOAD_VEC4(CcmList lists[])
+{
+	const char *name = lists[0].values[0].as.str.chars;
+	int length = lists[0].values[0].as.str.length;
+	int x = lists[1].values[0].as.number;
+	int y = lists[2].values[0].as.number;
+	int z = lists[3].values[0].as.number;
+	int w = lists[4].values[0].as.number;
+	set_state(VEC4(x, y, z, w), name, length);
+}
+
 static bool parse_update_impl(const char *src, int src_length, const char *predef_src, int predef_length)
 {
 #define TRY(name, arg_count) \
@@ -281,10 +309,25 @@ bool parse(const char *rom_path)
 #undef TRY
 }
 
+static bool load_save_impl(const char *src, int src_length)
+{
+#define TRY(name, arg_count) \
+	if (!ccm_define_primitive(#name, sizeof(#name) - 1, arg_count, save_hook_ ## name)) return false
+
+	ccm_set_logger(gvm_error);
+	ccm_set_allocators(gvm_malloc, gvm_ccm_realloc_wrapper, gvm_free);
+
+	TRY(LOAD_SCALAR, 2);
+	TRY(LOAD_VEC2, 3);
+	TRY(LOAD_VEC4, 5);
+
+	return ccm_execute(src, src_length);
+
+#undef TRY
+}
+
 bool load_save(const char *path)
 {
-	gvm_log("Loading save %s...\n", path);
-
 	int src_length;
 	char *src = read_file(path, &src_length);
 	if (NULL == src) {
@@ -292,9 +335,7 @@ bool load_save(const char *path)
 		return false;
 	}
 
-	// define primitives...
-	bool success = ccm_execute(src, src_length);
-
+	bool success = load_save_impl(src, src_length);
 	ccm_cleanup();
 	gvm_free(src);
 	return success;
