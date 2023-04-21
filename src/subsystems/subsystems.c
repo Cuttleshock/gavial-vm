@@ -13,6 +13,13 @@ static void glfw_error_callback(int error, const char *message)
 	gvm_error("GLFW E%4d: %s\n", error, message);
 }
 
+static void glfw_drop_callback(GLFWwindow *window, int path_count, const char *paths[])
+{
+	for (int i = 0; i < path_count; ++i) {
+		gvm_log("File dropped: %s\n", paths[i]);
+	}
+}
+
 bool init_subsystems(int window_width, int window_height, const char *title)
 {
 	glfwSetErrorCallback(glfw_error_callback);
@@ -20,7 +27,7 @@ bool init_subsystems(int window_width, int window_height, const char *title)
 		return false;
 	}
 
-	if (!init_window(window_width, window_height, title)) {
+	if (!init_window(window_width, window_height, title, glfw_drop_callback)) {
 		glfwTerminate();
 		return false;
 	}

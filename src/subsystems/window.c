@@ -75,7 +75,7 @@ bool window_should_close_impl()
 	return glfwWindowShouldClose(window);
 }
 
-bool init_window(int window_width, int window_height, const char *title)
+bool init_window(int window_width, int window_height, const char *title, GLFWdropfun drop_callback)
 {
 	// TODO: More error checking
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -89,6 +89,7 @@ bool init_window(int window_width, int window_height, const char *title)
 	}
 	glfwMakeContextCurrent(window);
 	glfwSetKeyCallback(window, glfw_key_callback);
+	glfwSetDropCallback(window, drop_callback);
 	glfwSwapInterval(1);
 
 	for (int i = 0; i < BUTTON_MAX; ++i) {
