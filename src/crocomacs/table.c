@@ -100,6 +100,10 @@ static uint64_t hash(const char *key, int key_length)
 // Returns: target insertion location (either exact match, or first empty slot after it)
 static struct entry *table_find_location(struct table *table, const char *key, int key_length)
 {
+	if (table->capacity == 0) {
+		return NULL;
+	}
+
 	struct entry *first_match = NULL;
 	for (uint64_t i = hash(key, key_length) % table->capacity; true; i = (i + 1) % table->capacity) {
 		const char *chars = table->entries[i].key.as.str.chars;
@@ -126,7 +130,7 @@ static struct entry *table_find_location(struct table *table, const char *key, i
 
 static bool is_empty(struct entry *entry)
 {
-	return entry->key.as.str.chars == NULL || entry->key.as.str.chars == TOMBSTONE;
+	return NULL == entry || NULL == entry->key.as.str.chars || TOMBSTONE == entry->key.as.str.chars;
 }
 
 // Returns: pointer to entry, or NULL if absent

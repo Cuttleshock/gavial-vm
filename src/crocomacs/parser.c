@@ -22,7 +22,7 @@ static Token param_names[256]; // TODO: nobody needs more than this, right?
 
 static void error_at(Token t, const char *message)
 {
-	ccm_log("Error: %s\n", message);
+	ccm_log("Error parsing script: %s\n", message);
 }
 
 // TODO: Should this live in table?

@@ -294,7 +294,7 @@ void set_symbol_hook(CcmSymbolHook hook)
 void runtime_error(const char *message)
 {
 	had_error = true;
-	ccm_log(message);
+	ccm_log("Error evaluating script: %s\n", message);
 }
 
 bool eval_macro(const char *name, int name_length)
