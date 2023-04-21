@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef void (*FileCb)(const char *path);
+typedef bool (*FileCb)(const char *path);
 
 bool init_subsystems(int window_width, int window_height, const char *title, FileCb file_cb);
 void input();

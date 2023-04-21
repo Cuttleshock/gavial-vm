@@ -17,11 +17,14 @@ static void glfw_error_callback(int error, const char *message)
 
 static void glfw_drop_callback(GLFWwindow *window, int path_count, const char *paths[])
 {
+	glfwFocusWindow(window);
+
 	if (NULL == on_file_drop) {
 		return;
 	}
 
 	for (int i = 0; i < path_count; ++i) {
+		// Return value ignored - it's not obviously better to quit if one fails
 		on_file_drop(paths[i]);
 	}
 }

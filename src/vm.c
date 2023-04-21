@@ -13,6 +13,7 @@
 #define INSTRUCTIONS_INITIAL_SIZE 256
 
 struct VM vm;
+char *queued_save_path = NULL;
 
 static void runtime_error(const char *message)
 {
@@ -217,6 +218,23 @@ bool init_vm()
 	return vm.instructions != NULL;
 }
 
+bool queue_save(const char *path)
+{
+	if (NULL != queued_save_path) {
+		gvm_free(queued_save_path);
+		queued_save_path = NULL;
+	}
+
+	queued_save_path = gvm_malloc(strlen(path) + 1);
+	if (NULL == queued_save_path) {
+		gvm_error("Could not load save file (queueing failed)\n");
+		return false;
+	}
+
+	strcpy(queued_save_path, path);
+	return true;
+}
+
 // Return value: true if named state is defined
 // If true, *index contains its location; else, the proper insertion location
 // to maintain order
@@ -392,6 +410,15 @@ bool run_vm(const char *rom_path)
 				}
 				input();
 			}
+		}
+
+		// Check for queued load
+		if (NULL != queued_save_path) {
+			load_save(queued_save_path);
+			gvm_free(queued_save_path);
+			queued_save_path = NULL;
+			// TODO: Freeze to aid in buffered input
+			input();
 		}
 
 		// Run VM loop

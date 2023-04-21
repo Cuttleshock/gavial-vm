@@ -38,6 +38,7 @@ typedef enum {
 } OpCode;
 
 bool init_vm();
+bool queue_save(const char *path);
 bool run_vm(const char *rom_path);
 void close_vm();
 bool instruction(uint8_t byte);

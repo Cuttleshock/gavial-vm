@@ -281,7 +281,21 @@ bool parse(const char *rom_path)
 #undef TRY
 }
 
-void load_save(const char *path)
+bool load_save(const char *path)
 {
 	gvm_log("Loading save %s...\n", path);
+
+	int src_length;
+	char *src = read_file(path, &src_length);
+	if (NULL == src) {
+		gvm_error("Error reading file %s\n", path);
+		return false;
+	}
+
+	// define primitives...
+	bool success = ccm_execute(src, src_length);
+
+	ccm_cleanup();
+	gvm_free(src);
+	return success;
 }
