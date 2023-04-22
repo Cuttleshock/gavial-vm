@@ -403,16 +403,18 @@ bool run_vm(const char *rom_path)
 		if (will_save_state) {
 			will_save_state = false;
 			if (!begin_serialise(rom_path)) {
-				gvm_error("Failed to save state\n");
+				gvm_error("Could not open file to save state\n");
 			} else {
 				for (int i = 0; i < vm.state_count; ++i) {
 					GvmConstant value = CONSTANT(vm.state[i].current, vm.state[i].type);
 					if (!serialise(vm.state[i].name, value)) {
-						gvm_error("Failed to save state\n");
+						gvm_error("Error serialising state\n");
 						break;
 					}
 				}
-				end_serialise();
+				if (!end_serialise()) {
+					gvm_error("Could not flush serialised state\n");
+				}
 			}
 		}
 

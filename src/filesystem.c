@@ -1,3 +1,6 @@
+#define _POSIX_C_SOURCE 200112L // fdopen(), localtime_r()
+
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -90,6 +93,40 @@ time_t last_modified(const char *path)
 	}
 
 	return out_stat.st_mtime;
+}
+
+// Returns: writable handle to file with unique name, or NULL on failure
+// On success, ownership is transferred: call fclose(file) when done. path is
+// assumed to be relative to the cwd.
+FILE *open_unique(const char *path, const char *suffix)
+{
+	char full_path[256] = { 0 };
+	char timestamp[32] = { 0 };
+
+	// Little dance to format time
+	time_t now = time(NULL);
+	if (now < 0) {
+		return NULL;
+	}
+	struct tm calendar;
+	if (localtime_r(&now, &calendar) != &calendar) {
+		return NULL;
+	}
+	strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", &calendar);
+
+	int chars = snprintf(full_path, sizeof(full_path), "%s_%s%s", path, timestamp, suffix);
+	if (chars < 0 || chars >= sizeof(full_path)) {
+		return NULL;
+	}
+
+	// Atomically create file for write only if it doesn't already exist
+	int fd = open(full_path, O_CREAT | O_WRONLY | O_EXCL, S_IRUSR | S_IWUSR);
+	if (fd < 0) {
+		// TODO: Try again with integer suffix
+		return NULL;
+	} else {
+		return fdopen(fd, "w");
+	}
 }
 
 // Opens path relative to cwd and reads to a buffer
