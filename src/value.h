@@ -14,6 +14,10 @@
 
 #define V2X(constant) ((constant).as.vec2[0])
 #define V2Y(constant) ((constant).as.vec2[1])
+#define V4X(constant) ((constant).as.vec4[0])
+#define V4Y(constant) ((constant).as.vec4[1])
+#define V4Z(constant) ((constant).as.vec4[2])
+#define V4W(constant) ((constant).as.vec4[3])
 
 typedef enum {
 	VAL_SCALAR,

@@ -38,6 +38,8 @@ static struct {
 static bool button_initial_press[BUTTON_MAX];
 static bool button_latest_press[BUTTON_MAX];
 
+static void (*on_save)(void) = NULL;
+
 static GLFWwindow *window = NULL;
 
 static bool key_registered_to(int glfw_key, Button button)
@@ -53,8 +55,15 @@ static bool key_registered_to(int glfw_key, Button button)
 
 static void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
-	if (key == GLFW_KEY_ESCAPE) {
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
+		return;
+	}
+
+	if (key == GLFW_KEY_S && action == GLFW_PRESS && (mods & GLFW_MOD_CONTROL)) {
+		if (NULL != on_save) {
+			on_save();
+		}
 		return;
 	}
 
@@ -75,7 +84,7 @@ bool window_should_close_impl()
 	return glfwWindowShouldClose(window);
 }
 
-bool init_window(int window_width, int window_height, const char *title, GLFWdropfun drop_callback)
+bool init_window(int window_width, int window_height, const char *title, GLFWdropfun drop_callback, void (*save_cb)(void))
 {
 	// TODO: More error checking
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -96,6 +105,8 @@ bool init_window(int window_width, int window_height, const char *title, GLFWdro
 		button_initial_press[i] = false;
 		button_latest_press[i] = false;
 	}
+
+	on_save = save_cb;
 
 	return true;
 }

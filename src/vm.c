@@ -5,6 +5,7 @@
 #include "vm.h"
 #include "memory.h"
 #include "parser.h"
+#include "serialise.h"
 #include "subsystems/subsystems.h"
 
 #define VM_IMPL
@@ -14,6 +15,7 @@
 
 struct VM vm;
 char *queued_load_path = NULL;
+bool will_save_state = false;
 
 static void runtime_error(const char *message)
 {
@@ -235,6 +237,11 @@ bool queue_load(const char *path)
 	return true;
 }
 
+void queue_save()
+{
+	will_save_state = true;
+}
+
 // Return value: true if named state is defined
 // If true, *index contains its location; else, the proper insertion location
 // to maintain order
@@ -392,6 +399,23 @@ bool run_vm(const char *rom_path)
 	locate_state("Time", 4, &time_index);
 
 	while (!loop_done) {
+		// Check for queued save
+		if (will_save_state) {
+			will_save_state = false;
+			if (!begin_serialise(rom_path)) {
+				gvm_error("Failed to save state\n");
+			} else {
+				for (int i = 0; i < vm.state_count; ++i) {
+					GvmConstant value = CONSTANT(vm.state[i].current, vm.state[i].type);
+					if (!serialise(vm.state[i].name, value)) {
+						gvm_error("Failed to save state\n");
+						break;
+					}
+				}
+				end_serialise();
+			}
+		}
+
 		// Re-parse ROM if appropriate
 		if (rom_timestamp != MODIFY_ERROR) {
 			time_t new_timestamp = last_modified(rom_path);

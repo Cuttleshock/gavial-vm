@@ -39,6 +39,7 @@ typedef enum {
 
 bool init_vm();
 bool queue_load(const char *path);
+void queue_save();
 bool run_vm(const char *rom_path);
 void close_vm();
 bool set_state(GvmConstant value, const char *name, int length);
