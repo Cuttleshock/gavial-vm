@@ -19,7 +19,6 @@ typedef enum {
 	VAL_SCALAR,
 	VAL_VEC2,
 	VAL_VEC4,
-	VAL_NONE,
 } GvmValType;
 
 typedef union {
