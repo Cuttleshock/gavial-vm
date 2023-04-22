@@ -13,7 +13,7 @@
 #define INSTRUCTIONS_INITIAL_SIZE 256
 
 struct VM vm;
-char *queued_save_path = NULL;
+char *queued_load_path = NULL;
 
 static void runtime_error(const char *message)
 {
@@ -218,20 +218,20 @@ bool init_vm()
 	return vm.instructions != NULL;
 }
 
-bool queue_save(const char *path)
+bool queue_load(const char *path)
 {
-	if (NULL != queued_save_path) {
-		gvm_free(queued_save_path);
-		queued_save_path = NULL;
+	if (NULL != queued_load_path) {
+		gvm_free(queued_load_path);
+		queued_load_path = NULL;
 	}
 
-	queued_save_path = gvm_malloc(strlen(path) + 1);
-	if (NULL == queued_save_path) {
+	queued_load_path = gvm_malloc(strlen(path) + 1);
+	if (NULL == queued_load_path) {
 		gvm_error("Could not load save file (queueing failed)\n");
 		return false;
 	}
 
-	strcpy(queued_save_path, path);
+	strcpy(queued_load_path, path);
 	return true;
 }
 
@@ -428,13 +428,13 @@ bool run_vm(const char *rom_path)
 		}
 
 		// Check for queued load
-		if (NULL != queued_save_path) {
-			gvm_log("Loading save %s...\n", queued_save_path);
-			if (!load_save(queued_save_path)) {
+		if (NULL != queued_load_path) {
+			gvm_log("Loading save %s...\n", queued_load_path);
+			if (!load_state(queued_load_path)) {
 				gvm_error("Error loading save file\n");
 			}
-			gvm_free(queued_save_path);
-			queued_save_path = NULL;
+			gvm_free(queued_load_path);
+			queued_load_path = NULL;
 			// TODO: Freeze to aid in buffered input
 			input();
 		}

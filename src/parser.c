@@ -297,6 +297,7 @@ static bool parse_palettes()
 	return true;
 }
 
+// TODO: Rename to load_rom()
 bool parse(const char *rom_path)
 {
 #define TRY(p) if (!p) return false;
@@ -326,7 +327,7 @@ static bool load_save_impl(const char *src, int src_length)
 #undef TRY
 }
 
-bool load_save(const char *path)
+bool load_state(const char *path)
 {
 	int src_length;
 	char *src = read_file(path, &src_length);
