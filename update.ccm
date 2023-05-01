@@ -1,9 +1,25 @@
 INIT UPDATE
 
 :INIT()
-	#DEFINE_VEC2(`badgers, 100, 200)
-	#DEFINE_VEC2(`rect_scale, 50, 50)
-	#DEFINE_VEC2(`rect_position, 0, 200)
+	#SET_PAL(0, 0, 1.0, 0.0, 0.0)
+	#SET_PAL(0, 1, 0.0, 1.0, 0.0)
+	#SET_PAL(0, 2, 0.0, 0.0, 1.0)
+	#BIND_PAL(0, 0)
+	#SET_PAL(1, 0, 0.0, 0.0, 0.0)
+	#SET_PAL(1, 1, 0.5, 0.5, 0.5)
+	#SET_PAL(1, 2, 1.0, 1.0, 1.0)
+	#BIND_PAL(1, 1)
+	#SET_PAL(2, 0, 1.0, 1.0, 0.0)
+	#SET_PAL(2, 1, 1.0, 0.0, 1.0)
+	#SET_PAL(2, 2, 0.0, 1.0, 1.0)
+	#BIND_PAL(2, 2)
+	#SET_PAL(3, 0, 0.5, 0.0, 0.0)
+	#SET_PAL(3, 1, 0.0, 0.5, 0.0)
+	#SET_PAL(3, 2, 0.0, 0.0, 0.5)
+	#BIND_PAL(3, 3)
+	#DEFINE_VEC2(`badgers, 50, 100)
+	#DEFINE_VEC2(`rect_scale, 20, 20)
+	#DEFINE_VEC2(`rect_position, 0, 100)
 
 :UPDATE()
 	IF(#PRESSED(BUTTON_UP),
@@ -17,13 +33,12 @@ INIT UPDATE
 			ADD_X(`rect_position, -1), ))
 
 	RECT(`rect_position, `rect_scale)(1, 1)
-	CONST_RECT(BUTTON_UP, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT)(0, 2)
 	RECT(
-		_(%(`Time, +(SCREEN_WIDTH, 50)), 50) 300 #MAKE_VEC2,
-		V2(50, 80)
+		_(%(`Time, +(SCREEN_WIDTH, 20)), 20) 10 #MAKE_VEC2,
+		V2(20, 30)
 	)(0, 1)
 	RECT(
-		V2(100, 80),
+		V2(40, 30),
 		`badgers
 	)(1, 2)
 	#RETURN

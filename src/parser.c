@@ -84,6 +84,24 @@ static void hook_DEFINE_VEC4(CcmList lists[])
 	gvm_free(name_copy);
 }
 
+static void hook_SET_PAL(CcmList lists[])
+{
+	int pal = lists[0].values[0].as.number;
+	int col = lists[1].values[0].as.number;
+	double r = lists[2].values[0].as.number;
+	double g = lists[3].values[0].as.number;
+	double b = lists[4].values[0].as.number;
+	set_palette_colour(pal, col, r, g, b);
+}
+
+static void hook_BIND_PAL(CcmList lists[])
+{
+	int bind = lists[0].values[0].as.number;
+	int pal = lists[1].values[0].as.number;
+	bind_palette(bind, pal);
+}
+
+// TODO: locate_state() logic should be internal to VM
 static void hook_SET(CcmList lists[])
 {
 	const char *name = lists[0].values[0].as.str.chars;
@@ -230,6 +248,8 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(DEFINE_SCALAR, 2);
 	TRY(DEFINE_VEC2, 3);
 	TRY(DEFINE_VEC4, 5);
+	TRY(SET_PAL, 5);
+	TRY(BIND_PAL, 2);
 	TRY(SET, 1);
 	TRY(ADD, 0);
 	TRY(SUBTRACT, 0);
@@ -279,31 +299,12 @@ static bool parse_update(const char *rom_path)
 	return success;
 }
 
-static bool parse_palettes()
-{
-	// TODO: Error checking
-	set_palette_colour(0, 0, 0.0, 0.0, 0.0); // black
-	set_palette_colour(0, 1, 1.0, 0.0, 0.0); // red
-	set_palette_colour(0, 2, 0.0, 1.0, 0.0); // green
-	set_palette_colour(0, 3, 0.0, 0.0, 1.0); // blue
-	bind_palette(0, 0);
-
-	set_palette_colour(1, 0, 1.0, 1.0, 1.0); // white
-	set_palette_colour(1, 1, 1.0, 0.0, 1.0); // magenta
-	set_palette_colour(1, 2, 0.0, 1.0, 1.0); // cyan
-	set_palette_colour(1, 3, 1.0, 1.0, 0.0); // brown or something
-	bind_palette(1, 1);
-
-	return true;
-}
-
 // TODO: Rename to load_rom()
 bool parse(const char *rom_path)
 {
 #define TRY(p) if (!p) return false;
 
 	TRY(parse_update(rom_path));
-	TRY(parse_palettes());
 
 	return true;
 
