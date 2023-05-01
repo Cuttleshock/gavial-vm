@@ -45,10 +45,10 @@ bool run_vm(const char *rom_path);
 void close_vm();
 bool set_state(GvmConstant value, const char *name, int length);
 bool instruction(uint8_t byte);
+bool state_instruction(uint8_t byte, const char *name, int length);
 bool jump(uint8_t byte, uint32_t *out_index);
 bool resolve_jump(uint32_t index);
 bool constant(GvmConstant value);
-bool locate_state(const char *name, int name_length, int *index);
 bool define_state(GvmConstant value, const char *name);
 
 #endif // VM_H

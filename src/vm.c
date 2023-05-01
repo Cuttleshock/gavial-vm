@@ -251,7 +251,7 @@ void queue_save()
 // If true, *index contains its location; else, the proper insertion location
 // to maintain order
 // TODO: Again, remove 'length' arg as soon as we clean up CCM strings
-bool locate_state(const char *name, int name_length, int *index)
+static bool locate_state(const char *name, int name_length, int *index)
 {
 	int low = 0;
 	int high = vm.state_count - 1;
@@ -336,6 +336,19 @@ bool instruction(uint8_t byte)
 
 	vm.instructions[vm.count++] = byte;
 	return true;
+}
+
+bool state_instruction(uint8_t byte, const char *name, int length)
+{
+	int index;
+	bool found = locate_state(name, length, &index);
+	if (!found) {
+		return false;
+	} else {
+		instruction(byte);
+		instruction(index);
+		return true;
+	}
 }
 
 // Returns: success. On success, out_index is a valid argument for resolve_jump().

@@ -31,14 +31,7 @@ static void hook_string(const char *str, int length)
 
 static void hook_symbol(const char *str, int length)
 {
-	int index;
-	bool found = locate_state(str, length, &index);
-	if (!found) {
-		ccm_runtime_error("Undefined variable");
-	} else {
-		instruction(OP_GET);
-		instruction(index);
-	}
+	state_instruction(OP_GET, str, length);
 }
 
 static void hook_DEFINE_SCALAR(CcmList lists[])
@@ -101,19 +94,11 @@ static void hook_BIND_PAL(CcmList lists[])
 	bind_palette(bind, pal);
 }
 
-// TODO: locate_state() logic should be internal to VM
 static void hook_SET(CcmList lists[])
 {
 	const char *name = lists[0].values[0].as.str.chars;
 	int length = lists[0].values[0].as.str.length;
-	int index;
-	bool found = locate_state(name, length, &index);
-	if (!found) {
-		ccm_runtime_error("Undefined variable");
-	} else {
-		instruction(OP_SET);
-		instruction(index);
-	}
+	state_instruction(OP_SET, name, length);
 }
 
 static void hook_MODULO(CcmList *)
