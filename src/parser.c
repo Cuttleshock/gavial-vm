@@ -191,6 +191,11 @@ static void hook_PRESSED(CcmList lists[])
 	instruction(button);
 }
 
+static void hook_CAM(CcmList[])
+{
+	instruction(OP_CAM);
+}
+
 // TODO: Argument checking
 static void hook_FILL_RECT(CcmList lists[])
 {
@@ -262,6 +267,7 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(JUMP_IF_FALSE, 0);
 	TRY(JUMP_AND_POP, 0);
 	TRY(POP_JUMP, 0);
+	TRY(CAM, 0);
 	TRY(FILL_RECT, 2);
 	TRY(RETURN, 0);
 

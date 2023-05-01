@@ -73,6 +73,11 @@ bool bind_palette(uint8_t bind_point, uint8_t target)
 	return bind_palette_impl(bind_point, target);
 }
 
+void set_camera(int x, int y)
+{
+	set_camera_impl(x, y);
+}
+
 // Returns: success
 bool set_palette_colour(uint8_t palette, uint8_t colour, float r, float g, float b)
 {

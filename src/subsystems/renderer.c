@@ -287,6 +287,8 @@ bool init_renderer(int window_width, int window_height, int pixel_scale, GLADloa
 		bind_palette_impl(i, 0);
 	}
 
+	set_camera_impl(0, 0);
+
 	return true;
 }
 
@@ -313,7 +315,14 @@ bool bind_palette_impl(uint8_t bind_point, uint8_t target)
 	return true;
 }
 
-// Store colour in one of the palettes
+// Sets camera for all subsequent draws
+// Drawing before calling this on a given frame yields undefined results
+void set_camera_impl(int x, int y)
+{
+	// TODO
+}
+
+// Store colour in one of the palettes - intended for initialisation only
 // Returns: success
 // TODO: See fill_rect_impl
 bool set_palette_colour_impl(uint8_t palette, uint8_t colour, float r, float g, float b)

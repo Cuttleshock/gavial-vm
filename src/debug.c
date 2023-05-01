@@ -37,6 +37,7 @@ static int disassemble_instruction(int i)
 		CASE(OP_GREATER_THAN);
 		CASE_BYTE(OP_BUTTON_PRESSED);
 		CASE_2BYTE(OP_LOAD_PAL);
+		CASE(OP_CAM);
 		CASE_2BYTE(OP_FILL_RECT);
 		CASE(OP_SWAP);
 		CASE(OP_DUP);

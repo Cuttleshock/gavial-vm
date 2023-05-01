@@ -28,6 +28,7 @@ typedef enum {
 	OP_BUTTON_PRESSED,
 	// Drawing
 	OP_LOAD_PAL,
+	OP_CAM,
 	OP_FILL_RECT,
 	// Stack manipulation
 	OP_SWAP,

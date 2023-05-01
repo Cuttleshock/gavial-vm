@@ -166,6 +166,11 @@ static bool update()
 				}
 				break;
 			}
+			case OP_CAM: {
+				GvmConstant where = pop();
+				set_camera(V2X(where), V2Y(where));
+				break;
+			}
 			case OP_FILL_RECT: {
 				uint8_t palette = BYTE();
 				uint8_t colour = BYTE();

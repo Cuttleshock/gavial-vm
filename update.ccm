@@ -32,6 +32,8 @@ INIT UPDATE
 		IF(#PRESSED(BUTTON_LEFT),
 			ADD_X(`rect_position, -1), ))
 
+	_(`rect_position, V2(86, 86)) #CAM
+
 	RECT(`rect_position, `rect_scale)(1, 1)
 	RECT(
 		_(%(`Time, +(SCREEN_WIDTH, 20)), 20) 10 #MAKE_VEC2,
