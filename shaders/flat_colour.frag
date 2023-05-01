@@ -1,10 +1,11 @@
-#version 300 es
+#version 330 core
 
-in mediump vec4 frag_color;
+uniform uint palette;
+uniform uint color_index;
 
-out mediump vec4 out_color;
+out uint out_color;
 
 void main()
 {
-	out_color = frag_color;
+	out_color = 3u * palette + color_index;
 }
