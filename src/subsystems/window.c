@@ -127,10 +127,12 @@ void input_impl()
 
 	for (int i = 0; i < BUTTON_MAX; ++i) {
 		button_initial_press[i] = false;
+		button_latest_press[i] = false;
 		for (int j = 0; j < key_mappings[i].count; ++j) {
 			int state = glfwGetKey(window, key_mappings[i].glfw_key[j]);
 			if (state == GLFW_PRESS) {
 				button_initial_press[i] = true;
+				button_latest_press[i] = true;
 				break;
 			}
 		}
