@@ -6,6 +6,8 @@
 // Pixel-to-screen conversion, set at init
 GLfloat g_window_width = 1.0f;
 GLfloat g_window_height = 1.0f;
+GLfloat g_pixel_scale = 1.0f;
+
 #define PX_TO_SCALE_X(x) (2.0f * (GLfloat)(x) / g_window_width)
 #define PX_TO_SCALE_Y(y) (2.0f * (GLfloat)(y) / g_window_height)
 #define PX_TO_POS_X(x)   (PX_TO_SCALE_X(x) - 1.0f)
@@ -202,7 +204,7 @@ static GLuint create_shader_program(int num_shaders, GLuint *shaders, int num_ou
 // Returns: success
 // TODO: Passing opengl_loader protects renderer.c from any GLFW logic but in
 // exchange leaks glad to the owner - fair trade?
-bool init_renderer(int window_width, int window_height, GLADloadfunc opengl_loader)
+bool init_renderer(int window_width, int window_height, int pixel_scale, GLADloadfunc opengl_loader)
 {
 	// TODO: Error checking
 	if (window_width == 0 || window_height == 0) { // Negative values are fine
@@ -210,6 +212,7 @@ bool init_renderer(int window_width, int window_height, GLADloadfunc opengl_load
 	}
 	g_window_width = (GLfloat)window_width;
 	g_window_height = (GLfloat)window_height;
+	g_pixel_scale = (GLfloat)pixel_scale;
 
 	int version = gladLoadGL(opengl_loader);
 

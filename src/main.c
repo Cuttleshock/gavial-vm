@@ -6,8 +6,9 @@
 #include "subsystems/subsystems.h"
 #include "vm.h"
 
-const int WINDOW_WIDTH = 512;
-const int WINDOW_HEIGHT = 512;
+const int WINDOW_WIDTH = 192;
+const int WINDOW_HEIGHT = 192;
+const int PIXEL_SCALE = 3;
 
 int main(int argc, char *argv[])
 {
@@ -18,7 +19,7 @@ int main(int argc, char *argv[])
 
 	gvm_log("Welcome to Gavial VM!\n");
 
-	if(!init_subsystems(WINDOW_WIDTH, WINDOW_HEIGHT, "Gavial VM", queue_load, queue_save)) {
+	if(!init_subsystems(WINDOW_WIDTH, WINDOW_HEIGHT, PIXEL_SCALE, "Gavial VM", queue_load, queue_save)) {
 		return EXIT_FAILURE;
 	}
 

@@ -6,7 +6,7 @@
 
 typedef bool (*FileCb)(const char *path);
 
-bool init_subsystems(int window_width, int window_height, const char *title, FileCb file_cb, void (*save_cb)(void));
+bool init_subsystems(int window_width, int window_height, int pixel_scale, const char *title, FileCb file_cb, void (*save_cb)(void));
 void input();
 bool button_pressed(int button);
 bool bind_palette(uint8_t bind_point, uint8_t target);
