@@ -290,8 +290,7 @@ static bool parse_update(const char *rom_path)
 	return success;
 }
 
-// TODO: Rename to load_rom()
-bool parse(const char *rom_path)
+bool load_rom(const char *rom_path)
 {
 #define TRY(p) if (!p) return false;
 

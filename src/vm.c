@@ -447,7 +447,7 @@ bool run_vm(const char *rom_path)
 				rom_timestamp = new_timestamp;
 				struct VM old_vm = vm;
 				init_vm();
-				if (!parse(rom_path)) {
+				if (!load_rom(rom_path)) {
 					gvm_error("Error parsing updated ROM %s\n", rom_path);
 					close_vm();
 					vm = old_vm;

@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
 	gvm_log("Welcome to Gavial VM!\n");
 
-	if(!init_subsystems(WINDOW_WIDTH, WINDOW_HEIGHT, PIXEL_SCALE, "Gavial VM", queue_load, queue_save)) {
+	if (!init_subsystems(WINDOW_WIDTH, WINDOW_HEIGHT, PIXEL_SCALE, "Gavial VM", queue_load, queue_save)) {
 		return EXIT_FAILURE;
 	}
 
@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 	}
 
 	gvm_log("Loading from %s...\n", rom_path);
-	if (!parse(rom_path)) {
+	if (!load_rom(rom_path)) {
 		close_vm();
 		close_subsystems();
 		return EXIT_FAILURE;
