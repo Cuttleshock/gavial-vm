@@ -14,6 +14,9 @@
 #define WHT "\x1B[37m"
 #define COLOR_RESET "\x1B[0m"
 
+#define SPRITE_SZ 12
+#define SPRITE_ROW 7
+
 void gvm_log(const char *format, ...);
 void gvm_error(const char *format, ...);
 void gvm_assert(bool assertion, const char *format, ...);

@@ -281,10 +281,15 @@ static bool parse_update(const char *src, int src_length)
 	return success;
 }
 
-static bool parse_sprite(const char *src, int src_length)
+// Returns: number of characters until newline or null terminator
+static int line_length(const char *chars)
 {
-	gvm_log("Parsed sprites:\n%.*s", src_length, src);
-	return true;
+	const char *newline = strchr(chars, '\n');
+	if (newline != NULL) {
+		return newline - chars;
+	} else {
+		return strlen(chars);
+	}
 }
 
 // Returns: pointer to just after the next newline in str, or NULL if none
@@ -315,6 +320,53 @@ static const char *find_line(const char *str, const char *line)
 	}
 
 	return NULL;
+}
+
+static bool parse_sprite(const char *src, int src_length)
+{
+	const char *end = &src[src_length];
+	int n_rows = 0;
+	for (const char *tapehead = src; tapehead < end && tapehead != NULL; tapehead = next_line(tapehead)) {
+		// Skip empty lines
+		if (line_length(tapehead) == 0) {
+			continue;
+		}
+
+		// Consume a row of sprites
+		char render_data[SPRITE_SZ * SPRITE_SZ * SPRITE_ROW];
+		for (int i = 0; i < SPRITE_SZ; ++i) {
+			if (tapehead >= end || tapehead == NULL) {
+				gvm_error("Incomplete row of sprites\n");
+				return false;
+			}
+
+			if (line_length(tapehead) != SPRITE_SZ * SPRITE_ROW) {
+				gvm_error("Improper line length in sprites\n");
+				return false;
+			}
+
+			for (int j = 0; j < SPRITE_SZ * SPRITE_ROW; ++j) {
+				char c = tapehead[j];
+				if ('0' <= c && c <= '2') {
+					render_data[i * SPRITE_SZ * SPRITE_ROW + j] = c - '0';
+				} else {
+					gvm_error("Unexpected character '%c'\n", c);
+					return false;
+				}
+			}
+
+			tapehead = next_line(tapehead);
+		}
+
+		// Give data to renderer
+		if (!define_sprite_row(render_data, n_rows)) {
+			return false;
+		}
+
+		++n_rows;
+	}
+
+	return true;
 }
 
 bool load_rom(const char *path)

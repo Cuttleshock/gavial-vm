@@ -385,6 +385,14 @@ bool set_palette_colour_impl(uint8_t palette, uint8_t colour, float r, float g, 
 	return true;
 }
 
+// Overwrites given row of the spritesheet
+// Returns: success
+bool define_sprite_row_impl(const char *data, int row)
+{
+	gvm_log("hot diddly defined %d\n", row);
+	return true;
+}
+
 // Draw a rectangle
 // Returns: success
 bool fill_rect_impl(int x, int y, int w, int h, uint8_t palette, uint8_t colour)

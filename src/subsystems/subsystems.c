@@ -84,6 +84,12 @@ bool set_palette_colour(uint8_t palette, uint8_t colour, float r, float g, float
 	return set_palette_colour_impl(palette, colour, r, g, b);
 }
 
+// Returns: success
+bool define_sprite_row(const char *data, int row)
+{
+	return define_sprite_row_impl(data, row);
+}
+
 void draw()
 {
 	render();
