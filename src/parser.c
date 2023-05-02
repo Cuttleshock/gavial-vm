@@ -265,7 +265,7 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 #undef TRY
 }
 
-static bool parse_update(const char *rom_path)
+static bool parse_update(const char *src, int src_length)
 {
 	// TODO: Not sure if keeping them in a file is necessary/helpful
 	int predef_length;
@@ -275,33 +275,96 @@ static bool parse_update(const char *rom_path)
 		return false;
 	}
 
-	int src_length;
-	char *src = read_file(rom_path, &src_length);
-	if (NULL == src) {
-		gvm_error("Could not read %s: aborting\n", rom_path);
-		gvm_free(predef_src);
-		return false;
-	}
-
 	bool success = parse_update_impl(src, src_length, predef_src, predef_length);
 	ccm_cleanup();
-	gvm_free(src);
 	gvm_free(predef_src);
 	return success;
 }
 
-bool load_rom(const char *rom_path)
+static bool parse_sprite(const char *src, int src_length)
 {
-#define TRY(p) if (!p) return false;
-
-	TRY(parse_update(rom_path));
-
+	gvm_log("Parsed sprites:\n%.*s", src_length, src);
 	return true;
-
-#undef TRY
 }
 
-static bool load_save_impl(const char *src, int src_length)
+// Returns: pointer to just after the next newline in str, or NULL if none
+static const char *next_line(const char *str)
+{
+	const char *line_end = strchr(str, '\n');
+	if (line_end == NULL) {
+		return NULL;
+	} else {
+		return ++line_end;
+	}
+}
+
+// Searches 'src' for a full line matching 'line' exactly, terminated by a
+// newline or the end of the string
+// Returns: start of line, or NULL if not found
+static const char *find_line(const char *str, const char *line)
+{
+	int length = strlen(line);
+	const char *location = strstr(str, line);
+	while (location != NULL && str != NULL) {
+		char term = location[length];
+		if ((term == '\n' || term == '\0') && (location == str || location[-1] == '\n')) {
+			return location;
+		}
+		str = next_line(location);
+		location = strstr(str, line);
+	}
+
+	return NULL;
+}
+
+bool load_rom(const char *path)
+{
+	jump_count = 0;
+
+	int src_length;
+	char *src = read_file(path, &src_length);
+	if (NULL == src) {
+		gvm_error("Could not read %s: aborting\n", path);
+		return false;
+	}
+
+	// TODO: Clean up/generalise once we have more sections
+	const char header_update[] = "🐊 UPDATE";
+	const char *line_update = find_line(src, header_update);
+	if (line_update != src) { // required to be first line
+		gvm_error("Expect '%s'\n", header_update);
+		gvm_free(src);
+		return false;
+	}
+	const char *chars_update = next_line(line_update);
+
+	const char header_sprite[] = "🐊 SPRITE";
+	const char *line_sprite = find_line(chars_update, header_sprite);
+	if (line_sprite == NULL) {
+		gvm_error("Expect '%s'\n", header_sprite);
+		gvm_free(src);
+		return false;
+	}
+	const char *chars_sprite = next_line(line_sprite);
+
+	int length_update = line_sprite - chars_update;
+	int length_sprite = &src[src_length] - chars_sprite;
+
+	if (!parse_update(chars_update, length_update)) {
+		gvm_free(src);
+		return false;
+	}
+
+	if (!parse_sprite(chars_sprite, length_sprite)) {
+		gvm_free(src);
+		return false;
+	}
+
+	gvm_free(src);
+	return true;
+}
+
+static bool load_state_impl(const char *src, int src_length)
 {
 #define TRY(name, arg_count) \
 	if (!ccm_define_primitive(#name, sizeof(#name) - 1, arg_count, save_hook_ ## name)) return false
@@ -327,7 +390,7 @@ bool load_state(const char *path)
 		return false;
 	}
 
-	bool success = load_save_impl(src, src_length);
+	bool success = load_state_impl(src, src_length);
 	ccm_cleanup();
 	gvm_free(src);
 	return success;
