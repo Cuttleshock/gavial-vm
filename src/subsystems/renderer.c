@@ -21,10 +21,10 @@ GLfloat g_window_height = 1.0f;
 GLfloat g_pixel_scale = 1.0f;
 // Direction vectors (geometry scale, camera)
 #define PX_TO_DIR_X(x) (2.0f * (GLfloat)(x) / g_window_width)
-#define PX_TO_DIR_Y(y) (2.0f * (GLfloat)(y) / g_window_height)
+#define PX_TO_DIR_Y(y) (2.0f * (GLfloat)(-y) / g_window_height)
 // Position vectors (geometry/sprite location)
 #define PX_TO_POS_X(x) (PX_TO_DIR_X(x) - 1.0f)
-#define PX_TO_POS_Y(y) (PX_TO_DIR_Y(y) - 1.0f)
+#define PX_TO_POS_Y(y) (PX_TO_DIR_Y(y) + 1.0f)
 
 static GLuint vao;
 

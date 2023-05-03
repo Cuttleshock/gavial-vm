@@ -25,9 +25,9 @@ INIT UPDATE
 
 :UPDATE()
 	IF(#PRESSED(BUTTON_UP),
-		ADD_Y(`rect_position, 1),
+		ADD_Y(`rect_position, -1),
 		IF(#PRESSED(BUTTON_DOWN),
-			ADD_Y(`rect_position, -1), ))
+			ADD_Y(`rect_position, 1), ))
 
 	IF(#PRESSED(BUTTON_RIGHT),
 		ADD_X(`rect_position, 1),
