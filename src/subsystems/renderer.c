@@ -423,6 +423,12 @@ bool fill_rect_impl(int x, int y, int w, int h, uint8_t palette, uint8_t colour)
 	return true;
 }
 
+bool sprite_impl(int x, int y, uint8_t sheet_x, uint8_t sheet_y, uint8_t palette)
+{
+	gvm_log("you drew it @ (%d, %d) from (%d, %d) in %d\n", x, y, sheet_x, sheet_y, palette);
+	return true;
+}
+
 void render()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

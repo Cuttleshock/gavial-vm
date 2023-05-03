@@ -14,7 +14,10 @@ static int disassemble_instruction(int i)
 #define CASE_BYTE(op) case op: gvm_log(#op " %02x\n", vm.instructions[++i]); return ++i
 #define CASE_2BYTE(op) case op: \
 	gvm_log(#op " %02x %02x\n", vm.instructions[i + 1], vm.instructions[i + 2]); \
-	return ++i
+	return i += 2
+#define CASE_3BYTE(op) case op: \
+	gvm_log(#op " %02x %02x %02x\n", vm.instructions[i + 1], vm.instructions[i + 2], vm.instructions[i + 3]); \
+	return i += 3
 #define CASE_32BIT(op) case op: \
 	gvm_log(#op " %d\n", *((uint32_t *)&vm.instructions[i + 1])); \
 	return i += 5
@@ -39,6 +42,7 @@ static int disassemble_instruction(int i)
 		CASE_2BYTE(OP_LOAD_PAL);
 		CASE(OP_CAM);
 		CASE_2BYTE(OP_FILL_RECT);
+		CASE_3BYTE(OP_SPRITE);
 		CASE(OP_SWAP);
 		CASE(OP_DUP);
 		CASE(OP_POP);

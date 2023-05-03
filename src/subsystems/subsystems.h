@@ -16,6 +16,7 @@ void set_camera(int x, int y);
 bool set_palette_colour(uint8_t palette, uint8_t colour, float r, float g, float b);
 bool define_sprite_row(const char *data, int row);
 bool fill_rect(int x, int y, int w, int h, uint8_t palette, uint8_t colour);
+bool sprite(int x, int y, uint8_t sheet_x, uint8_t sheet_y, uint8_t palette);
 void draw();
 bool window_should_close();
 void close_subsystems();

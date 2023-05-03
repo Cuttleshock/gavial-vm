@@ -181,6 +181,16 @@ static bool update()
 				}
 				break;
 			}
+			case OP_SPRITE: {
+				uint8_t sheet_x = BYTE();
+				uint8_t sheet_y = BYTE();
+				uint8_t palette = BYTE();
+				GvmConstant position = pop();
+				if (!sprite(V2X(position), V2Y(position), sheet_x, sheet_y, palette)) {
+					runtime_error("Failed to draw sprite");
+				}
+				break;
+			}
 			case OP_SWAP: {
 				GvmConstant b = pop();
 				GvmConstant a = peek();

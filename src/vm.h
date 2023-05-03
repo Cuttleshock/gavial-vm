@@ -30,6 +30,7 @@ typedef enum {
 	OP_LOAD_PAL,
 	OP_CAM,
 	OP_FILL_RECT,
+	OP_SPRITE,
 	// Stack manipulation
 	OP_SWAP,
 	OP_DUP,

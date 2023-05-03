@@ -45,6 +45,7 @@ INIT UPDATE
 		V2(40, 30),
 		`badgers
 	)(1, 2)
+	V2(10, 20) #SPRITE(0, 1, 2)
 	#RETURN
 
 :V2() #VEC2

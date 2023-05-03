@@ -68,6 +68,12 @@ bool fill_rect(int x, int y, int w, int h, uint8_t palette, uint8_t colour)
 }
 
 // Returns: success
+bool sprite(int x, int y, uint8_t sheet_x, uint8_t sheet_y, uint8_t palette)
+{
+	return sprite_impl(x, y, sheet_x, sheet_y, palette);
+}
+
+// Returns: success
 bool bind_palette(uint8_t bind_point, uint8_t target)
 {
 	return bind_palette_impl(bind_point, target);
