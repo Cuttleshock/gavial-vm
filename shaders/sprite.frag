@@ -13,5 +13,8 @@ void main()
 {
 	vec2 sheet_location = sprite_location + frag_tex_position * sprite_scale;
 	uvec4 colour = texture(sprite_sheet, sheet_location);
+	if (colour.r == 0u) {
+		discard;
+	}
 	out_color = 3u * palette + colour.r;
 }
