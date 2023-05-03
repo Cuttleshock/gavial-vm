@@ -359,8 +359,13 @@ static bool parse_sprite(const char *src, int src_length)
 
 			for (int j = 0; j < SPRITE_SZ * SPRITE_COLS; ++j) {
 				char c = tapehead[j];
-				if ('0' <= c && c <= '2') {
-					render_data[i * SPRITE_SZ * SPRITE_COLS + j] = c - '0';
+				uint8_t *target = &render_data[i * SPRITE_SZ * SPRITE_COLS + j];
+				if (' ' == c) {
+					*target = 0;
+				} else if ('.' == c) {
+					*target = 1;
+				} else if ('o' == c) {
+					*target = 2;
 				} else {
 					gvm_error("Unexpected character '%c'\n", c);
 					return false;
