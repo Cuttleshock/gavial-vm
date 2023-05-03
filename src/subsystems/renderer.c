@@ -500,6 +500,8 @@ bool sprite_impl(int x, int y, uint8_t sheet_x, uint8_t sheet_y, uint8_t palette
 		int sprite_location = glGetUniformLocation(programs[PROG_SPRITE], "sprite_location");
 		glUniform2f(sprite_location, sheet_x_rel, sheet_y_rel);
 		glUniform1ui(glGetUniformLocation(programs[PROG_SPRITE], "palette"), palette);
+		int flip = glGetUniformLocation(programs[PROG_SPRITE], "flip");
+		glUniform2f(flip, h_flip ? 1.0f : 0.0f, v_flip ? 1.0f : 0.0f);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, fb_uncoloured_buffer);
 		glViewport(0, 0, g_window_width, g_window_height);
