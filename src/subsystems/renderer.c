@@ -42,7 +42,8 @@ static GLuint fb_uncoloured_buffer;
 
 // glBindTexture locations
 enum {
-	TEX_UNRESOLVED,
+	TEX_UNCOLOURED_LOC,
+	TEX_SPRITESHEET_LOC,
 };
 
 // glBindBufferRange locations
@@ -53,6 +54,7 @@ enum {
 enum {
 	PROG_PALETTE_RESOLUTION,
 	PROG_QUAD,
+	PROG_SPRITE,
 	PROG_COUNT,
 };
 static GLuint programs[PROG_COUNT];
@@ -255,7 +257,7 @@ bool init_renderer(int window_width, int window_height, int pixel_scale, GLADloa
 	}
 	glBindTexture(GL_TEXTURE_2D, textures[TEX_SPRITESHEET]); {
 		// Uninitialised - using unset sprites yields undefined behaviour
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, SPRITE_COLS * SPRITE_SZ, SPRITE_COLS * SPRITE_ROWS, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, SPRITE_COLS * SPRITE_SZ, SPRITE_ROWS * SPRITE_SZ, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	}
@@ -301,7 +303,7 @@ bool init_renderer(int window_width, int window_height, int pixel_scale, GLADloa
 		glUseProgram(programs[PROG_PALETTE_RESOLUTION]); {
 			GLint loc_sampler = glGetUniformLocation(programs[PROG_PALETTE_RESOLUTION], "unresolved");
 			GLint loc_position = glGetAttribLocation(programs[PROG_PALETTE_RESOLUTION], "position");
-			glUniform1i(loc_sampler, TEX_UNRESOLVED);
+			glUniform1i(loc_sampler, TEX_UNCOLOURED_LOC);
 			glEnableVertexAttribArray(loc_position);
 			glBindBuffer(GL_ARRAY_BUFFER, vbo_quad); {
 				glVertexAttribPointer(loc_position, 2, GL_FLOAT, GL_FALSE, 0, 0);
@@ -327,6 +329,35 @@ bool init_renderer(int window_width, int window_height, int pixel_scale, GLADloa
 			glBindBuffer(GL_ARRAY_BUFFER, vbo_quad); {
 				glVertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE, 0, 0);
 			}
+		}
+	}
+
+	// Sprite drawing shader
+	{
+		GLuint shaders[2];
+		shaders[0] = load_shader("shaders/blit_quad.vert", GL_VERTEX_SHADER);
+		shaders[1] = load_shader("shaders/sprite.frag", GL_FRAGMENT_SHADER);
+		gvm_assert(shaders[0] != 0 && shaders[1] != 0, "Failed to compile sprite shaders\n");
+		char *outs[] = { "out_color" };
+		programs[PROG_SPRITE] = create_shader_program(2, shaders, 1, outs);
+		gvm_assert(programs[PROG_SPRITE] != 0, "Failed to link sprite shaders\n");
+		glDeleteShader(shaders[0]);
+		glDeleteShader(shaders[1]);
+
+		glUseProgram(programs[PROG_SPRITE]); {
+			GLint sprite_sheet = glGetUniformLocation(programs[PROG_SPRITE], "sprite_sheet");
+			glUniform1i(sprite_sheet, TEX_SPRITESHEET_LOC);
+			GLint position = glGetAttribLocation(programs[PROG_SPRITE], "position");
+			glEnableVertexAttribArray(position);
+			glBindBuffer(GL_ARRAY_BUFFER, vbo_quad); {
+				glVertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE, 0, 0);
+			}
+			GLint scale = glGetUniformLocation(programs[PROG_SPRITE], "scale");
+			glUniform2f(scale, PX_TO_DIR_X(SPRITE_SZ), PX_TO_DIR_Y(SPRITE_SZ));
+			GLint sprite_scale = glGetUniformLocation(programs[PROG_SPRITE], "sprite_scale");
+			GLfloat scale_x = 1.0f / ((GLfloat)SPRITE_COLS);
+			GLfloat scale_y = 1.0f / ((GLfloat)SPRITE_ROWS);
+			glUniform2f(sprite_scale, scale_x, scale_y);
 		}
 	}
 
@@ -372,6 +403,11 @@ void set_camera_impl(int x, int y)
 {
 	glUseProgram(programs[PROG_QUAD]); {
 		GLint location = glGetUniformLocation(programs[PROG_QUAD], "camera");
+		glUniform2f(location, PX_TO_DIR_X(x), PX_TO_DIR_Y(y));
+	}
+
+	glUseProgram(programs[PROG_SPRITE]); {
+		GLint location = glGetUniformLocation(programs[PROG_SPRITE], "camera");
 		glUniform2f(location, PX_TO_DIR_X(x), PX_TO_DIR_Y(y));
 	}
 }
@@ -445,7 +481,33 @@ bool fill_rect_impl(int x, int y, int w, int h, uint8_t palette, uint8_t colour)
 
 bool sprite_impl(int x, int y, uint8_t sheet_x, uint8_t sheet_y, uint8_t palette)
 {
-	gvm_log("you drew it @ (%d, %d) from (%d, %d) in %d\n", x, y, sheet_x, sheet_y, palette);
+	if (sheet_x >= SPRITE_COLS || sheet_y >= SPRITE_ROWS) {
+		gvm_error("Invalid sprite drawn: (%d, %d)\n", sheet_x, sheet_y);
+		return false;
+	} else if (palette >= N_BIND_POINTS) {
+		gvm_error("Sprite drawn with invalid palette %d\n", palette);
+		return false;
+	}
+
+	glActiveTexture(GL_TEXTURE0 + TEX_SPRITESHEET_LOC); {
+		glBindTexture(GL_TEXTURE_2D, textures[TEX_SPRITESHEET]);
+	}
+	glUseProgram(programs[PROG_SPRITE]); {
+		int displacement = glGetUniformLocation(programs[PROG_SPRITE], "displacement");
+		glUniform2f(displacement, PX_TO_POS_X(x), PX_TO_POS_Y(y));
+		GLfloat sheet_x_rel = ((GLfloat)sheet_x) / ((GLfloat)SPRITE_COLS);
+		GLfloat sheet_y_rel = ((GLfloat)sheet_y) / ((GLfloat)SPRITE_ROWS);
+		int sprite_location = glGetUniformLocation(programs[PROG_SPRITE], "sprite_location");
+		glUniform2f(sprite_location, sheet_x_rel, sheet_y_rel);
+		glUniform1ui(glGetUniformLocation(programs[PROG_SPRITE], "palette"), palette);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, fb_uncoloured_buffer);
+		glViewport(0, 0, g_window_width, g_window_height);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_quad); {
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
+	}
+
 	return true;
 }
 
@@ -453,7 +515,7 @@ void render()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, g_window_width * g_pixel_scale, g_window_height * g_pixel_scale);
-	glActiveTexture(GL_TEXTURE0 + TEX_UNRESOLVED); {
+	glActiveTexture(GL_TEXTURE0 + TEX_UNCOLOURED_LOC); {
 		glBindTexture(GL_TEXTURE_2D, textures[TEX_UNCOLOURED]);
 	}
 	glUseProgram(programs[PROG_PALETTE_RESOLUTION]); {
