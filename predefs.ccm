@@ -1,5 +1,4 @@
 ; TODO: Magic values abound
-#DEFINE_VEC2(`Camera, 0, 0)
 #DEFINE_SCALAR(`Time, 0)
 
 :IF(?cond, ?if, ?else) ?cond #JUMP_IF_FALSE ?if #JUMP_AND_POP ?else #POP_JUMP
