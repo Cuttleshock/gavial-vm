@@ -91,7 +91,7 @@ bool set_palette_colour(uint8_t palette, uint8_t colour, float r, float g, float
 }
 
 // Returns: success
-bool define_sprite_row(const char *data, int row)
+bool define_sprite_row(const uint8_t *data, int row)
 {
 	return define_sprite_row_impl(data, row);
 }

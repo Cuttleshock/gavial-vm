@@ -387,9 +387,13 @@ bool set_palette_colour_impl(uint8_t palette, uint8_t colour, float r, float g, 
 
 // Overwrites given row of the spritesheet
 // Returns: success
-bool define_sprite_row_impl(const char *data, int row)
+bool define_sprite_row_impl(const uint8_t *data, int row)
 {
-	gvm_log("hot diddly defined %d\n", row);
+	if (row >= SPRITE_ROWS) {
+		gvm_error("Maximum of %d rows of sprites exceeded\n", SPRITE_ROWS);
+		return false;
+	}
+
 	return true;
 }
 

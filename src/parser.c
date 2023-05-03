@@ -345,22 +345,22 @@ static bool parse_sprite(const char *src, int src_length)
 		}
 
 		// Consume a row of sprites
-		char render_data[SPRITE_SZ * SPRITE_SZ * SPRITE_ROW];
+		uint8_t render_data[SPRITE_SZ * SPRITE_SZ * SPRITE_COLS];
 		for (int i = 0; i < SPRITE_SZ; ++i) {
 			if (tapehead >= end || tapehead == NULL) {
 				gvm_error("Incomplete row of sprites\n");
 				return false;
 			}
 
-			if (line_length(tapehead) != SPRITE_SZ * SPRITE_ROW) {
+			if (line_length(tapehead) != SPRITE_SZ * SPRITE_COLS) {
 				gvm_error("Improper line length in sprites\n");
 				return false;
 			}
 
-			for (int j = 0; j < SPRITE_SZ * SPRITE_ROW; ++j) {
+			for (int j = 0; j < SPRITE_SZ * SPRITE_COLS; ++j) {
 				char c = tapehead[j];
 				if ('0' <= c && c <= '2') {
-					render_data[i * SPRITE_SZ * SPRITE_ROW + j] = c - '0';
+					render_data[i * SPRITE_SZ * SPRITE_COLS + j] = c - '0';
 				} else {
 					gvm_error("Unexpected character '%c'\n", c);
 					return false;

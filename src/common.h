@@ -15,7 +15,8 @@
 #define COLOR_RESET "\x1B[0m"
 
 #define SPRITE_SZ 12
-#define SPRITE_ROW 7
+#define SPRITE_COLS 7
+#define SPRITE_ROWS 100
 
 void gvm_log(const char *format, ...);
 void gvm_error(const char *format, ...);
