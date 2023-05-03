@@ -31,7 +31,13 @@ static GLuint vao;
 static GLuint vbo_quad;
 static GLuint ubo_palette;
 
-static GLuint tex_uncoloured_buffer;
+enum {
+	TEX_UNCOLOURED,
+	TEX_SPRITESHEET,
+	TEX_COUNT,
+};
+static GLuint textures[TEX_COUNT];
+
 static GLuint fb_uncoloured_buffer;
 
 // glBindTexture locations
@@ -241,17 +247,23 @@ bool init_renderer(int window_width, int window_height, int pixel_scale, GLADloa
 		glBufferData(GL_ARRAY_BUFFER, sizeof(quad_data), quad_data, GL_STATIC_DRAW);
 	}
 
-	// Framebuffer for unresolved texture
-	glGenTextures(1, &tex_uncoloured_buffer);
-	glBindTexture(GL_TEXTURE_2D, tex_uncoloured_buffer); {
+	glGenTextures(TEX_COUNT, textures);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_UNCOLOURED]); {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, window_width, window_height, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	}
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_SPRITESHEET]); {
+		// Uninitialised - using unset sprites yields undefined behaviour
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, SPRITE_COLS * SPRITE_SZ, SPRITE_COLS * SPRITE_ROWS, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	}
 
+	// Framebuffer for unresolved texture
 	glGenFramebuffers(1, &fb_uncoloured_buffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, fb_uncoloured_buffer); {
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex_uncoloured_buffer, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textures[TEX_UNCOLOURED], 0);
 		gvm_assert(
 			glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,
 			"Unresolved palette framebuffer incomplete\n"
@@ -394,6 +406,10 @@ bool define_sprite_row_impl(const uint8_t *data, int row)
 		return false;
 	}
 
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_SPRITESHEET]); {
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, SPRITE_SZ * row, SPRITE_SZ * SPRITE_COLS, SPRITE_SZ, GL_RED_INTEGER, GL_UNSIGNED_BYTE, data);
+	}
+
 	return true;
 }
 
@@ -438,7 +454,7 @@ void render()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, g_window_width * g_pixel_scale, g_window_height * g_pixel_scale);
 	glActiveTexture(GL_TEXTURE0 + TEX_UNRESOLVED); {
-		glBindTexture(GL_TEXTURE_2D, tex_uncoloured_buffer);
+		glBindTexture(GL_TEXTURE_2D, textures[TEX_UNCOLOURED]);
 	}
 	glUseProgram(programs[PROG_PALETTE_RESOLUTION]); {
 		// Shouldn't need to glClearColor() before drawing
@@ -464,7 +480,7 @@ void close_renderer()
 		glDeleteBuffers(1, &vbo_quad);
 	}
 
-	glDeleteTextures(1, &tex_uncoloured_buffer);
+	glDeleteTextures(TEX_COUNT, textures);
 	glDeleteFramebuffers(1, &fb_uncoloured_buffer);
 
 	glDeleteVertexArrays(1, &vao);
