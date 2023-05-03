@@ -479,7 +479,7 @@ bool fill_rect_impl(int x, int y, int w, int h, uint8_t palette, uint8_t colour)
 	return true;
 }
 
-bool sprite_impl(int x, int y, uint8_t sheet_x, uint8_t sheet_y, uint8_t palette)
+bool sprite_impl(int x, int y, uint8_t sheet_x, uint8_t sheet_y, uint8_t palette, uint8_t h_flip, uint8_t v_flip)
 {
 	if (sheet_x >= SPRITE_COLS || sheet_y >= SPRITE_ROWS) {
 		gvm_error("Invalid sprite drawn: (%d, %d)\n", sheet_x, sheet_y);

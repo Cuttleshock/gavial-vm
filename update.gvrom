@@ -45,7 +45,10 @@ INIT UPDATE
 		V2(40, 30),
 		`badgers
 	)(1, 2)
-	V2(10, 20) #SPRITE(0, 1, 2)
+	V2(0, 80) #SPRITE(0, 0, 2, false, false)
+	V2(20, 80) #SPRITE(0, 0, 2, true, false)
+	V2(0, 100) #SPRITE(0, 0, 2, false, true)
+	V2(20, 100) #SPRITE(0, 0, 2, true, true)
 	#RETURN
 
 :V2() #VEC2
@@ -59,28 +62,28 @@ INIT UPDATE
 
 🐊 SPRITE
 
-                                                                                    
- ..........  ...................................................................... 
- .oooooooo.  .oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo. 
- .o      o.  .o                                                                  o. 
- .o .... o.  .o ................................................................ o. 
- .o .oo. o.  .o .oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo. o. 
- .o .oo. o.  .o .oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo. o. 
- .o .... o.  .o ................................................................ o. 
- .o      o.  .o                                                                  o. 
- .oooooooo.  .oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo. 
- ..........  ...................................................................... 
-                                                                                    
+ oooooooooo                                                              .o .oo. o. 
+ooooooo.oooo ..........  ....................... .........................o .oo. o..
+ooooooo..ooo .oooooooo.  .oooooooooooooooooooooo .ooooooooooooooooooooooooo .oo. ooo
+ooo.......oo .o      o.  .o                      .o                         .oo.    
+oo........oo .o .... o.  .o .................... .o .........................oo.....
+oo..ooo..ooo .o .oo. o.  .o .ooooooooooooooooooo .o .ooooooooooooooooooooooooooooooo
+oo..ooo.oooo .o .oo. o.  .o .ooooooooooooooooooo .o .ooooooooooooooooooooooooooooooo
+oo..oooooooo .o .... o.  .o .................... .o .oo..........oo..........oo.....
+oo..oooooooo .o      o.  .o                      .o .oo.        .oo.        .oo.    
+oo..oooooooo .oooooooo.  .oooooooooooooooooooooo .o .oo. oooooo .oo. oooooo .oo. ooo
+oooooooooooo ..........  ....................... .o .oo. o....o .oo. o....o .oo. o..
+ oooooooooo                                      .o .oo. o.  .o .oo. o.  .o .oo. o. 
 
- .o .oo. o.  .o .oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo. o. 
- .o .... o.  .o ................................................................ o. 
- .o      o.  .o                                                                  o. 
- .oooooooo.  .oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo. 
- ..........  ...................................................................... 
-                                                                                    
-                                                                                    
- ..........  ...................................................................... 
- .oooooooo.  .oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo. 
- .o      o.  .o                                                                  o. 
- .o .... o.  .o ................................................................ o. 
- .o .oo. o.  .o .oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo. o. 
+            ............ooooooooooooooooooooooooooooooooooooooooooooooooooooooo. o. 
+            ............oooooooooooo............................................ o. 
+            ............oooooooooooo                                             o. 
+            ............oooooooooooooooooooooooooooooooooooooooooooooooooooooooooo. 
+            ............oooooooooooo............................................... 
+            ............oooooooooooo                                                
+            ............oooooooooooo                                                
+            ............oooooooooooo............................................... 
+            ............oooooooooooooooooooooooooooooooooooooooooooooooooooooooooo. 
+            ............oooooooooooo                                             o. 
+            ............oooooooooooo............................................ o. 
+            ............ooooooooooooooooooooooooooooooooooooooooooooooooooooooo. o. 

@@ -185,8 +185,10 @@ static bool update()
 				uint8_t sheet_x = BYTE();
 				uint8_t sheet_y = BYTE();
 				uint8_t palette = BYTE();
+				uint8_t h_flip = BYTE();
+				uint8_t v_flip = BYTE();
 				GvmConstant position = pop();
-				if (!sprite(V2X(position), V2Y(position), sheet_x, sheet_y, palette)) {
+				if (!sprite(V2X(position), V2Y(position), sheet_x, sheet_y, palette, h_flip, v_flip)) {
 					runtime_error("Failed to draw sprite");
 				}
 				break;

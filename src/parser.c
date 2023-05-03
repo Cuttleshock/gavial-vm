@@ -196,10 +196,14 @@ static void hook_SPRITE(CcmList lists[])
 	int sprite_x = lists[0].values[0].as.number;
 	int sprite_y = lists[1].values[0].as.number;
 	int pal = lists[2].values[0].as.number;
+	int h_flip = lists[3].values[0].as.number;
+	int v_flip = lists[4].values[0].as.number;
 	instruction(OP_SPRITE);
 	instruction(sprite_x);
 	instruction(sprite_y);
 	instruction(pal);
+	instruction(h_flip);
+	instruction(v_flip);
 }
 
 static void hook_RETURN(CcmList *)
@@ -265,7 +269,7 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(POP_JUMP, 0);
 	TRY(CAM, 0);
 	TRY(FILL_RECT, 2);
-	TRY(SPRITE, 3);
+	TRY(SPRITE, 5);
 	TRY(RETURN, 0);
 
 	if (!ccm_execute(predef_src, predef_length)) {

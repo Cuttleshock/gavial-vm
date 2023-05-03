@@ -13,3 +13,6 @@
 :BUTTON_START() 7
 :SCREEN_WIDTH() 192
 :SCREEN_HEIGHT() 192
+
+:false() 0
+:true() 1

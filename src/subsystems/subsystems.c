@@ -68,9 +68,9 @@ bool fill_rect(int x, int y, int w, int h, uint8_t palette, uint8_t colour)
 }
 
 // Returns: success
-bool sprite(int x, int y, uint8_t sheet_x, uint8_t sheet_y, uint8_t palette)
+bool sprite(int x, int y, uint8_t sheet_x, uint8_t sheet_y, uint8_t palette, uint8_t h_flip, uint8_t v_flip)
 {
-	return sprite_impl(x, y, sheet_x, sheet_y, palette);
+	return sprite_impl(x, y, sheet_x, sheet_y, palette, h_flip, v_flip);
 }
 
 // Returns: success
