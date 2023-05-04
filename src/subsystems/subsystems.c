@@ -96,6 +96,12 @@ bool define_sprite_row(const uint8_t *data, int row)
 	return define_sprite_row_impl(data, row);
 }
 
+// Returns: success
+bool register_map(const uint8_t (*map)[4], int width, int height)
+{
+	return register_map_impl(map, width, height);
+}
+
 void draw()
 {
 	render();

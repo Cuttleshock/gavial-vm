@@ -75,15 +75,98 @@ oo..oooooooo .oooooooo.  .oooooooooooooooooooooo .o .oo. oooooo .oo. oooooo .oo.
 oooooooooooo ..........  ....................... .o .oo. o....o .oo. o....o .oo. o..
  oooooooooo                                      .o .oo. o.  .o .oo. o.  .o .oo. o. 
 
-            ............ooooooooooooooooooooooooooooooooooooooooooooooooooooooo. o. 
-            ............oooooooooooo............................................ o. 
-            ............oooooooooooo                                             o. 
-            ............oooooooooooooooooooooooooooooooooooooooooooooooooooooooooo. 
-            ............oooooooooooo............................................... 
-            ............oooooooooooo                                                
-            ............oooooooooooo                                                
-            ............oooooooooooo............................................... 
-            ............oooooooooooooooooooooooooooooooooooooooooooooooooooooooooo. 
-            ............oooooooooooo                                             o. 
-            ............oooooooooooo............................................ o. 
-            ............ooooooooooooooooooooooooooooooooooooooooooooooooooooooo. o. 
+            ............oooooooooooo .o .oo. o. ooooooooooooooooooooooooooooooo. o. 
+            ............oooooooooooo .o .oo. o. ................................ o. 
+            ............oooooooooooo .o .oo. o.                                  o. 
+            ............oooooooooooo .o .oo. o. oooooooooooooooooooooooooooooooooo. 
+            ............oooooooooooo .o .oo. o. ................................... 
+            ............oooooooooooo .o .oo. o.                                     
+            ............oooooooooooo .o .oo. o.                                     
+            ............oooooooooooo .o .oo. o. ................................... 
+            ............oooooooooooo .o .oo. o. oooooooooooooooooooooooooooooooooo. 
+            ............oooooooooooo .o .oo. o.                                  o. 
+            ............oooooooooooo .o .oo. o. ................................ o. 
+            ............oooooooooooo .o .oo. o. ooooooooooooooooooooooooooooooo. o. 
+
+🐊 MAP
+
+a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01e00d00d00d00d00d00d00d00d00d00d00d00d00e00a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                              h                                                 
+b01a01d01a01a01a01a01a01a01a01a01a01a01a01b01d01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01d01a01a01a01a01a01a01a01a01a01a01a01b01d01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01d01a01a01a01a01a01a01a01a01a01a01a01b01d01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01d01a01a01a01a01a01a01a01a01a01a01a01b01d01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01d01a01a01a01a01a01a01a01a01a01a01a01b01d01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01d01a01a01a01a01a01a01a01a01a01a01a01b01d01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01e00d00d00d00d00d00d00d00d00d00d00d00d00e00b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+        v                                     hv                                                
+a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                
+a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                                                                
+b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                                                                

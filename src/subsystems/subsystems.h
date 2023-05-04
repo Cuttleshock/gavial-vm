@@ -15,6 +15,7 @@ bool bind_palette(uint8_t bind_point, uint8_t target);
 void set_camera(int x, int y);
 bool set_palette_colour(uint8_t palette, uint8_t colour, float r, float g, float b);
 bool define_sprite_row(const uint8_t *data, int row);
+bool register_map(const uint8_t (*map)[4], int width, int height);
 bool fill_rect(int x, int y, int w, int h, uint8_t palette, uint8_t colour);
 bool sprite(int x, int y, uint8_t sheet_x, uint8_t sheet_y, uint8_t palette, uint8_t h_flip, uint8_t v_flip);
 void draw();

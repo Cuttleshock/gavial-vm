@@ -449,6 +449,14 @@ bool define_sprite_row_impl(const uint8_t *data, int row)
 	return true;
 }
 
+// Copies the given map to VRAM
+// Returns: success
+bool register_map_impl(const uint8_t (*map)[4], int width, int height)
+{
+	gvm_log("you registered it - dimensions (%d, %d)\n", width, height);
+	return true;
+}
+
 // Draw a rectangle
 // Returns: success
 bool fill_rect_impl(int x, int y, int w, int h, uint8_t palette, uint8_t colour)

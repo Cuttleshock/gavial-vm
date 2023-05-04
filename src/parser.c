@@ -352,12 +352,12 @@ static bool parse_sprite(const char *src, int src_length)
 		uint8_t render_data[SPRITE_SZ * SPRITE_SZ * SPRITE_COLS];
 		for (int i = 0; i < SPRITE_SZ; ++i) {
 			if (tapehead >= end || tapehead == NULL) {
-				gvm_error("Incomplete row of sprites\n");
+				gvm_error("Sprite: incomplete row\n");
 				return false;
 			}
 
 			if (line_length(tapehead) != SPRITE_SZ * SPRITE_COLS) {
-				gvm_error("Improper line length in sprites\n");
+				gvm_error("Sprite: improper line length\n");
 				return false;
 			}
 
@@ -371,7 +371,7 @@ static bool parse_sprite(const char *src, int src_length)
 				} else if ('o' == c) {
 					*target = 2;
 				} else {
-					gvm_error("Unexpected character '%c'\n", c);
+					gvm_error("Sprite: unexpected character '%c'\n", c);
 					return false;
 				}
 			}
@@ -390,6 +390,109 @@ static bool parse_sprite(const char *src, int src_length)
 	return true;
 }
 
+static bool parse_map(const char *src, int src_length)
+{
+	const char *end = &src[src_length];
+	const char *tapehead = src;
+	int width = 0;
+	int height = 0;
+
+	// Skip empty lines
+	while (tapehead < end && tapehead != NULL && line_length(tapehead) == 0) {
+		tapehead = next_line(tapehead);
+	}
+
+	// Special case: empty
+	if (tapehead >= end || NULL == tapehead) {
+		return register_map(NULL, 0, 0);
+	}
+
+	// Special (bad) case
+	if (line_length(tapehead) % 3 != 0) {
+		gvm_error("Malformed map\n");
+		return false;
+	}
+
+	// Scan for width + height
+	const char *map_start = tapehead;
+	width = line_length(tapehead) / 3;
+	while (tapehead < end && tapehead != NULL && line_length(tapehead) > 0) {
+		if (line_length(tapehead) != width * 3) {
+			gvm_error("Map: incomplete line of sprite coordinates\n");
+			return false;
+		}
+		tapehead = next_line(tapehead);
+
+		if (tapehead >= end || NULL == tapehead || line_length(tapehead) != width * 3) {
+			gvm_error("Map: incomplete line of sprite flags\n");
+			return false;
+		}
+		tapehead = next_line(tapehead);
+		++height;
+	}
+
+	tapehead = map_start;
+	uint8_t (*map)[4] = gvm_malloc(sizeof(map[0]) * width * height);
+	if (map == NULL) {
+		return false;
+	}
+
+	// Fully parse
+	for (int i = 0; i < height; ++i) {
+		// Coordinates...
+		for (int j = 0; j < width; ++j) {
+			char row = tapehead[j * 3];
+			map[i * width + j][0] = row - 'a';
+			if (row < 'a' || 'g' < row) {
+				gvm_error("Map: unexpected character '%c' (expect between 'a' and 'g')\n", row);
+				gvm_free(map);
+				return false;
+			}
+
+			// Parse y-coord manually - atoi() causes more problems than it solves
+			char c0 = tapehead[j * 3 + 1];
+			char c1 = tapehead[j * 3 + 2];
+			map[i * width + j][1] = (c0 - '0') * 10 + (c1 - '0');
+			if (c0 < '0' || '9' < c0 || c1 < '0' || '9' < c1) {
+				gvm_error("Map: invalid column number\n");
+				gvm_free(map);
+				return false;
+			}
+		}
+		tapehead = next_line(tapehead);
+
+		// Flags...
+		for (int j = 0; j < width; ++j) {
+			if (tapehead[j * 3] != ' ') {
+				gvm_error("Map: expect empty space\n");
+				gvm_free(map);
+				return false;
+			}
+
+			char h = tapehead[j * 3 + 1];
+			map[i * width + j][2] = ('h' == h);
+			if (' ' != h && 'h' != h) {
+				gvm_error("Map: expect ' ' or 'h'\n");
+				gvm_free(map);
+				return false;
+			}
+
+			char v = tapehead[j * 3 + 2];
+			map[i * width + j][3] = ('v' == v);
+			if (' ' != v && 'v' != v) {
+				gvm_error("Map: expect ' ' or 'v'\n");
+				gvm_free(map);
+				return false;
+			}
+		}
+		tapehead = next_line(tapehead);
+	}
+
+	bool success = register_map(map, width, height);
+	gvm_free(map);
+	return success;
+}
+
 bool load_rom(const char *path)
 {
 	jump_count = 0;
@@ -401,7 +504,7 @@ bool load_rom(const char *path)
 		return false;
 	}
 
-	// TODO: Clean up/generalise once we have more sections
+	// TODO: Clean up/generalise
 	const char header_update[] = "🐊 UPDATE";
 	const char *line_update = find_line(src, header_update);
 	if (line_update != src) { // required to be first line
@@ -420,8 +523,18 @@ bool load_rom(const char *path)
 	}
 	const char *chars_sprite = next_line(line_sprite);
 
+	const char header_map[] = "🐊 MAP";
+	const char *line_map = find_line(chars_sprite, header_map);
+	if (line_map == NULL) {
+		gvm_error("Expect '%s'\n", header_map);
+		gvm_free(src);
+		return false;
+	}
+	const char *chars_map = next_line(line_map);
+
 	int length_update = line_sprite - chars_update;
-	int length_sprite = &src[src_length] - chars_sprite;
+	int length_sprite = line_map - chars_sprite;
+	int length_map = &src[src_length] - chars_map;
 
 	if (!parse_update(chars_update, length_update)) {
 		gvm_free(src);
@@ -429,6 +542,11 @@ bool load_rom(const char *path)
 	}
 
 	if (!parse_sprite(chars_sprite, length_sprite)) {
+		gvm_free(src);
+		return false;
+	}
+
+	if (!parse_map(chars_map, length_map)) {
 		gvm_free(src);
 		return false;
 	}
