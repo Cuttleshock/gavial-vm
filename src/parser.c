@@ -239,7 +239,7 @@ static void save_hook_LOAD_VEC4(CcmList lists[])
 	set_state(VEC4(x, y, z, w), name, length);
 }
 
-static bool parse_update_impl(const char *src, int src_length, const char *predef_src, int predef_length)
+static bool parse_update_impl(const char *src, int src_length, const char *predef_src, int predef_length, int initial_line)
 {
 #define TRY(name, arg_count) \
 	if (!ccm_define_primitive(#name, sizeof(#name) - 1, arg_count, hook_ ## name)) return false
@@ -272,16 +272,16 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(SPRITE, 5);
 	TRY(RETURN, 0);
 
-	if (!ccm_execute(predef_src, predef_length)) {
+	if (!ccm_execute(predef_src, predef_length, 1)) {
 		return false;
 	}
 
-	return ccm_execute(src, src_length);
+	return ccm_execute(src, src_length, initial_line);
 
 #undef TRY
 }
 
-static bool parse_update(const char *src, int src_length)
+static bool parse_update(const char *src, int src_length, int initial_line)
 {
 	// TODO: Not sure if keeping them in a file is necessary/helpful
 	int predef_length;
@@ -291,7 +291,7 @@ static bool parse_update(const char *src, int src_length)
 		return false;
 	}
 
-	bool success = parse_update_impl(src, src_length, predef_src, predef_length);
+	bool success = parse_update_impl(src, src_length, predef_src, predef_length, initial_line);
 	ccm_cleanup();
 	gvm_free(predef_src);
 	return success;
@@ -317,6 +317,19 @@ static const char *next_line(const char *str)
 	} else {
 		return ++line_end;
 	}
+}
+
+// Returns: line number of 'end' relative to 'start', beginning at 1
+// Does no error-checking - ensure arguments are valid
+static int line_number(const char *start, const char *end)
+{
+	int line = 0;
+	const char *head = start;
+	while (head <= end) {
+		head = next_line(head);
+		++line;
+	}
+	return line;
 }
 
 // Searches 'src' for a full line matching 'line' exactly, terminated by a
@@ -537,7 +550,7 @@ bool load_rom(const char *path)
 	int length_sprite = line_map - chars_sprite;
 	int length_map = &src[src_length] - chars_map;
 
-	if (!parse_update(chars_update, length_update)) {
+	if (!parse_update(chars_update, length_update, line_number(src, chars_update))) {
 		gvm_free(src);
 		return false;
 	}
@@ -568,7 +581,7 @@ static bool load_state_impl(const char *src, int src_length)
 	TRY(LOAD_VEC2, 3);
 	TRY(LOAD_VEC4, 5);
 
-	return ccm_execute(src, src_length);
+	return ccm_execute(src, src_length, 1);
 
 #undef TRY
 }

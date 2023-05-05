@@ -20,9 +20,14 @@ static int macro_capacity = 0;
 
 static Token param_names[256]; // TODO: nobody needs more than this, right?
 
+static void error_token(Token t)
+{
+	ccm_log("[%d:%d] Parse error: %.*s\n", t.line, t.character, t.length, t.chars);
+}
+
 static void error_at(Token t, const char *message)
 {
-	ccm_log("Error parsing script: %s\n", message);
+	ccm_log("[%d:%d] Parse error: %s\n", t.line, t.character, message);
 }
 
 // TODO: Should this live in table?
@@ -329,7 +334,7 @@ static bool call(Token left_paren, Sentence *current)
 				error_at(t, "Expect ')'");
 				return false;
 			case TOKEN_ERROR:
-				print_token(t);
+				error_token(t);
 				return false;
 		}
 	}
@@ -348,13 +353,13 @@ static void cleanup_parser()
 	macro_capacity = 0;
 }
 
-static bool compile_impl(const char *source, int length, const char *initial_name, int initial_name_length)
+static bool compile_impl(const char *source, int length, const char *initial_name, int initial_name_length, int initial_line)
 {
 	if (!start_macro_def(initial_name, initial_name_length, 0)) {
 		return false;
 	}
 
-	set_source(source, length);
+	set_source(source, length, initial_line);
 
 #define CASE(type, method) \
 	case type: \
@@ -382,7 +387,7 @@ static bool compile_impl(const char *source, int length, const char *initial_nam
 				error_at(t, "Commas are only allowed in argument lists");
 				return false;
 			case TOKEN_ERROR:
-				print_token(t);
+				error_token(t);
 				return false;
 			case TOKEN_EOF:
 				// Define in reverse order so it's easy to clean up in case of failure
@@ -406,9 +411,9 @@ static bool compile_impl(const char *source, int length, const char *initial_nam
 // Return value: success
 // If successful, subsequent executions will respect all new definitions.
 // Otherwise, no change is made.
-bool compile(const char *source, int length, const char *initial_name, int initial_name_length)
+bool compile(const char *source, int length, const char *initial_name, int initial_name_length, int initial_line)
 {
-	bool success = compile_impl(source, length, initial_name, initial_name_length);
+	bool success = compile_impl(source, length, initial_name, initial_name_length, initial_line);
 	cleanup_parser();
 	return success;
 }

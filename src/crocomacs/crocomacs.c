@@ -74,13 +74,13 @@ void ccm_runtime_error(const char *message)
 // Shallow-define macros but do not run.
 // Failure modes:
 // - Parse error
-bool ccm_compile(const char *source, int length)
+bool ccm_compile(const char *source, int length, int initial_line)
 {
 	if (source == NULL) {
 		return false;
 	}
 
-	return compile(source, length, CURRENT_PROGRAM, 0);
+	return compile(source, length, CURRENT_PROGRAM, 0, initial_line);
 }
 
 // Fully expand the provided source, running all primitives.
@@ -89,9 +89,9 @@ bool ccm_compile(const char *source, int length)
 // - An undefined macro is encountered
 // - Stack overflow (likely caused by recursion)
 // - ccm_static_error() is called by a hook
-bool ccm_execute(const char *source, int length)
+bool ccm_execute(const char *source, int length, int initial_line)
 {
-	if (!ccm_compile(source, length)) {
+	if (!ccm_compile(source, length, initial_line)) {
 		return false;
 	}
 

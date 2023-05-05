@@ -14,8 +14,8 @@ void ccm_set_string_hook(CcmStringHook);
 void ccm_set_symbol_hook(CcmSymbolHook);
 
 void ccm_runtime_error(const char *message); // TODO: accept '...'
-bool ccm_compile(const char *source, int length);
-bool ccm_execute(const char *source, int length);
+bool ccm_compile(const char *source, int length, int initial_line);
+bool ccm_execute(const char *source, int length, int initial_line);
 void ccm_cleanup();
 
 #endif // CROCOMACS_H

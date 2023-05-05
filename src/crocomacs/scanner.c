@@ -10,6 +10,12 @@ static const char *source = NULL;
 static const char *end = NULL;
 static const char *token_start = NULL;
 static const char *tapehead = NULL;
+// These could be calculated on the fly but the hassle and inefficiency of doing
+// so outweighs the downsides of making them global
+static int token_start_line = 0;
+static int token_start_character = 0;
+static int line = 0;
+static int character = 0;
 
 static Token token_at(TokenType type, const char *chars, int length)
 {
@@ -17,6 +23,8 @@ static Token token_at(TokenType type, const char *chars, int length)
 	token.type = type;
 	token.chars = chars;
 	token.length = length;
+	token.line = token_start_line;
+	token.character = token_start_character;
 	return token;
 }
 
@@ -44,12 +52,25 @@ static char peek()
 
 static char advance()
 {
+	switch (*tapehead) {
+		case '\n':
+			++line;
+			character = 1;
+			break;
+		case '\r':
+			break;
+		default:
+			++character;
+			break;
+	}
 	return *(++tapehead);
 }
 
 static void start_token()
 {
 	token_start = tapehead;
+	token_start_line = line;
+	token_start_character = character;
 }
 
 // TODO: More exhaustive?
@@ -258,9 +279,11 @@ static Token macro()
 	return identifier(TOKEN_MACRO, "Empty macro name", "Malformed macro", false);
 }
 
-void set_source(const char *chars, int length)
+void set_source(const char *chars, int length, int initial_line)
 {
 	source = chars;
+	line = initial_line;
+	character = 1;
 	end = chars + length;
 	token_start = chars;
 	tapehead = chars;

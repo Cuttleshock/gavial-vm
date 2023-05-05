@@ -7,6 +7,6 @@
 
 #include <stdbool.h>
 
-bool compile(const char *source, int length, const char *initial_name, int initial_name_length);
+bool compile(const char *source, int length, const char *initial_name, int initial_name_length, int initial_line);
 
 #endif // CROCOMACS_PARSER_H

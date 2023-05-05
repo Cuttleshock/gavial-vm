@@ -31,9 +31,11 @@ typedef struct {
 	TokenType type;
 	const char *chars;
 	int length;
+	int line;
+	int character;
 } Token;
 
-void set_source(const char *chars, int length);
+void set_source(const char *chars, int length, int initial_line);
 void print_token(Token t);
 Token scan_token();
 
