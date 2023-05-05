@@ -432,6 +432,7 @@ static bool parse_map(const char *src, int src_length)
 	}
 
 	tapehead = map_start;
+	// TODO: Using 2D array here might cause more confusion than it clarifies
 	uint8_t (*map)[4] = gvm_malloc(sizeof(map[0]) * width * height);
 	if (map == NULL) {
 		return false;

@@ -19,6 +19,10 @@ struct palettes {
 GLfloat g_window_width = 1.0f;
 GLfloat g_window_height = 1.0f;
 GLfloat g_pixel_scale = 1.0f;
+// TODO: Drawing map one time on register, then blitting appropriately at
+// render, saves this state and much more
+GLint g_map_width = 0;
+GLint g_map_height = 0;
 // Direction vectors (geometry scale, camera)
 #define PX_TO_DIR_X(x) (2.0f * (GLfloat)(x) / g_window_width)
 #define PX_TO_DIR_Y(y) (2.0f * (GLfloat)(-y) / g_window_height)
@@ -29,16 +33,19 @@ GLfloat g_pixel_scale = 1.0f;
 static GLuint vao;
 
 static GLuint vbo_quad;
+static GLuint vbo_map;
 static GLuint ubo_palette;
 
 enum {
 	TEX_UNCOLOURED,
+	TEX_UNCOLOURED_MAP,
 	TEX_SPRITESHEET,
 	TEX_COUNT,
 };
 static GLuint textures[TEX_COUNT];
 
 static GLuint fb_uncoloured_buffer;
+static GLuint fb_uncoloured_map;
 
 // glBindTexture locations
 enum {
@@ -55,6 +62,7 @@ enum {
 	PROG_PALETTE_RESOLUTION,
 	PROG_QUAD,
 	PROG_SPRITE,
+	PROG_MAP,
 	PROG_COUNT,
 };
 static GLuint programs[PROG_COUNT];
@@ -249,8 +257,16 @@ bool init_renderer(int window_width, int window_height, int pixel_scale, GLADloa
 		glBufferData(GL_ARRAY_BUFFER, sizeof(quad_data), quad_data, GL_STATIC_DRAW);
 	}
 
+	// Map storage - uninitialised until register_map() called
+	glGenBuffers(1, &vbo_map);
+
 	glGenTextures(TEX_COUNT, textures);
 	glBindTexture(GL_TEXTURE_2D, textures[TEX_UNCOLOURED]); {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, window_width, window_height, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	}
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_UNCOLOURED_MAP]); {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_R8UI, window_width, window_height, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -276,6 +292,17 @@ bool init_renderer(int window_width, int window_height, int pixel_scale, GLADloa
 		glViewport(0, 0, g_window_width, g_window_height); {
 			glClear(GL_COLOR_BUFFER_BIT);
 		}
+	}
+
+	// Framebuffer for map texture
+	// TODO: Use a single framebuffer where possible
+	glGenFramebuffers(1, &fb_uncoloured_map);
+	glBindFramebuffer(GL_FRAMEBUFFER, fb_uncoloured_map); {
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textures[TEX_UNCOLOURED_MAP], 0);
+		gvm_assert(
+			glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,
+			"Map framebuffer incomplete\n"
+		);
 	}
 
 	// Palette UBO
@@ -361,6 +388,50 @@ bool init_renderer(int window_width, int window_height, int pixel_scale, GLADloa
 		}
 	}
 
+	// Map drawing shader
+	{
+		GLuint shaders[2];
+		shaders[0] = load_shader("shaders/map.vert", GL_VERTEX_SHADER);
+		shaders[1] = load_shader("shaders/sprite.frag", GL_FRAGMENT_SHADER);
+		gvm_assert(shaders[0] != 0 && shaders[1] != 0, "Failed to compile map shaders\n");
+		char *outs[] = { "out_color" };
+		programs[PROG_MAP] = create_shader_program(2, shaders, 1, outs);
+		gvm_assert(programs[PROG_MAP] != 0, "Failed to link map shaders\n");
+		glDeleteShader(shaders[0]);
+		glDeleteShader(shaders[1]);
+
+		glUseProgram(programs[PROG_MAP]); {
+			GLint palette = glGetUniformLocation(programs[PROG_MAP], "palette");
+			glUniform1ui(palette, 0);
+			// TODO: This, 'scale' and 'sprite_scale' are shared - consider UBO
+			GLint sprite_sheet = glGetUniformLocation(programs[PROG_MAP], "sprite_sheet");
+			glUniform1i(sprite_sheet, TEX_SPRITESHEET_LOC);
+			GLint position = glGetAttribLocation(programs[PROG_MAP], "position");
+			glEnableVertexAttribArray(position);
+			glBindBuffer(GL_ARRAY_BUFFER, vbo_quad); {
+				glVertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE, 0, 0);
+			}
+			GLint scale = glGetUniformLocation(programs[PROG_MAP], "scale");
+			glUniform2f(scale, PX_TO_DIR_X(SPRITE_SZ), PX_TO_DIR_Y(SPRITE_SZ));
+			GLint sprite_scale = glGetUniformLocation(programs[PROG_MAP], "sprite_scale");
+			GLfloat scale_x = 1.0f / ((GLfloat)SPRITE_COLS);
+			GLfloat scale_y = 1.0f / ((GLfloat)SPRITE_ROWS);
+			glUniform2f(sprite_scale, scale_x, scale_y);
+			GLint sprite_location = glGetAttribLocation(programs[PROG_MAP], "sprite_location");
+			glEnableVertexAttribArray(sprite_location);
+			glVertexAttribDivisor(sprite_location, 1);
+			glBindBuffer(GL_ARRAY_BUFFER, vbo_map); {
+				glVertexAttribPointer(sprite_location, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
+			}
+			GLint flip = glGetAttribLocation(programs[PROG_MAP], "flip");
+			glEnableVertexAttribArray(flip);
+			glVertexAttribDivisor(flip, 1);
+			glBindBuffer(GL_ARRAY_BUFFER, vbo_map); {
+				glVertexAttribPointer(flip, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), ((void *)(2 * sizeof(GLfloat))));
+			}
+		}
+	}
+
 	// Set defaults (all black)
 	for (int pal = 0; pal < N_PALETTES; ++pal) {
 		for (int col = 0; col < N_COLORS; ++col) {
@@ -399,6 +470,7 @@ bool bind_palette_impl(uint8_t bind_point, uint8_t target)
 
 // Sets camera for all subsequent draws
 // Drawing before calling this on a given frame yields undefined results
+// TODO: A UBO makes sense for this
 void set_camera_impl(int x, int y)
 {
 	glUseProgram(programs[PROG_QUAD]); {
@@ -408,6 +480,11 @@ void set_camera_impl(int x, int y)
 
 	glUseProgram(programs[PROG_SPRITE]); {
 		GLint location = glGetUniformLocation(programs[PROG_SPRITE], "camera");
+		glUniform2f(location, PX_TO_DIR_X(x), PX_TO_DIR_Y(y));
+	}
+
+	glUseProgram(programs[PROG_MAP]); {
+		GLint location = glGetUniformLocation(programs[PROG_MAP], "camera");
 		glUniform2f(location, PX_TO_DIR_X(x), PX_TO_DIR_Y(y));
 	}
 }
@@ -453,7 +530,30 @@ bool define_sprite_row_impl(const uint8_t *data, int row)
 // Returns: success
 bool register_map_impl(const uint8_t (*map)[4], int width, int height)
 {
-	gvm_log("you registered it - dimensions (%d, %d)\n", width, height);
+	GLfloat *map_floats = gvm_malloc(width * height * 4 * sizeof(*map_floats));
+	if (NULL == map_floats) {
+		return false;
+	}
+
+	for (int i = 0; i < width * height; ++i) {
+		map_floats[4 * i + 0] = ((GLfloat)map[i][0]) / ((GLfloat)SPRITE_COLS);
+		map_floats[4 * i + 1] = ((GLfloat)map[i][1]) / ((GLfloat)SPRITE_ROWS);
+		map_floats[4 * i + 2] = ((GLfloat)map[i][2]);
+		map_floats[4 * i + 3] = ((GLfloat)map[i][3]);
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_map); {
+		glBufferData(GL_ARRAY_BUFFER, width * height * 4 * sizeof(*map_floats), map_floats, GL_STATIC_DRAW);
+	}
+
+	glUseProgram(programs[PROG_MAP]); {
+		glUniform1i(glGetUniformLocation(programs[PROG_MAP], "map_width"), width);
+	}
+
+	g_map_width = width;
+	g_map_height = height;
+
+	gvm_free(map_floats);
 	return true;
 }
 
@@ -512,8 +612,7 @@ bool sprite_impl(int x, int y, uint8_t sheet_x, uint8_t sheet_y, uint8_t palette
 		glUniform2f(flip, h_flip ? 1.0f : 0.0f, v_flip ? 1.0f : 0.0f);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, fb_uncoloured_buffer);
-		glViewport(0, 0, g_window_width, g_window_height);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo_quad); {
+		glViewport(0, 0, g_window_width, g_window_height); {
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
 	}
@@ -523,13 +622,29 @@ bool sprite_impl(int x, int y, uint8_t sheet_x, uint8_t sheet_y, uint8_t palette
 
 void render()
 {
+	// Generate background
+	glActiveTexture(GL_TEXTURE0 + TEX_SPRITESHEET_LOC); {
+		glBindTexture(GL_TEXTURE_2D, textures[TEX_SPRITESHEET]);
+	}
+	glUseProgram(programs[PROG_MAP]);
+	glBindFramebuffer(GL_FRAMEBUFFER, fb_uncoloured_map);
+	glViewport(0, 0, g_window_width, g_window_height);
+	glClearColor(0.0, 0.0, 0.0, 0.0); {
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDrawArraysInstanced(GL_TRIANGLES, 0, 6, g_map_width * g_map_height);
+	}
+
+	// Resolve colours of intermediate buffers
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, g_window_width * g_pixel_scale, g_window_height * g_pixel_scale);
-	glActiveTexture(GL_TEXTURE0 + TEX_UNCOLOURED_LOC); {
-		glBindTexture(GL_TEXTURE_2D, textures[TEX_UNCOLOURED]);
-	}
+	glActiveTexture(GL_TEXTURE0 + TEX_UNCOLOURED_LOC);
 	glUseProgram(programs[PROG_PALETTE_RESOLUTION]); {
 		// Shouldn't need to glClearColor() before drawing
+		glUniform1i(glGetUniformLocation(programs[PROG_PALETTE_RESOLUTION], "discard_zero"), 0);
+		glBindTexture(GL_TEXTURE_2D, textures[TEX_UNCOLOURED_MAP]);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glUniform1i(glGetUniformLocation(programs[PROG_PALETTE_RESOLUTION], "discard_zero"), 1);
+		glBindTexture(GL_TEXTURE_2D, textures[TEX_UNCOLOURED]);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 
@@ -550,10 +665,12 @@ void close_renderer()
 	glBindVertexArray(vao); {
 		glDeleteBuffers(1, &ubo_palette);
 		glDeleteBuffers(1, &vbo_quad);
+		glDeleteBuffers(1, &vbo_map);
 	}
 
 	glDeleteTextures(TEX_COUNT, textures);
 	glDeleteFramebuffers(1, &fb_uncoloured_buffer);
+	glDeleteFramebuffers(1, &fb_uncoloured_map);
 
 	glDeleteVertexArrays(1, &vao);
 }
