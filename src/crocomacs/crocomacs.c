@@ -72,6 +72,7 @@ void ccm_runtime_error(const char *message)
 }
 
 // Shallow-define macros but do not run.
+// 'length' must exclude the null terminator.
 // Failure modes:
 // - Parse error
 bool ccm_compile(const char *source, int length, int initial_line)
@@ -84,6 +85,7 @@ bool ccm_compile(const char *source, int length, int initial_line)
 }
 
 // Fully expand the provided source, running all primitives.
+// 'length' must exclude the null terminator (as in ccm_compile).
 // Failure modes:
 // - Parse error
 // - An undefined macro is encountered

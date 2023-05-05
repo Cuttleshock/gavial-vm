@@ -1,6 +1,3 @@
-; TODO: Magic values abound
-#DEFINE_SCALAR(`Time, 0)
-
 :IF(?cond, ?if, ?else) ?cond #JUMP_IF_FALSE ?if #JUMP_AND_POP ?else #POP_JUMP
 
 :BUTTON_A() 0

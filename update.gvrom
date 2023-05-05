@@ -19,11 +19,14 @@ INIT UPDATE
 	#SET_PAL(3, 1, 0.0, 0.5, 0.0)
 	#SET_PAL(3, 2, 0.0, 0.0, 0.5)
 	#BIND_PAL(3, 3)
+	#DEFINE_SCALAR(`time, 0)
 	#DEFINE_VEC2(`badgers, 50, 100)
 	#DEFINE_VEC2(`rect_scale, 20, 20)
 	#DEFINE_VEC2(`rect_position, 0, 100)
 
 :UPDATE()
+	ADD(`time, 1)
+
 	IF(#PRESSED(BUTTON_UP),
 		ADD_Y(`rect_position, -1),
 		IF(#PRESSED(BUTTON_DOWN),
@@ -38,7 +41,7 @@ INIT UPDATE
 
 	RECT(`rect_position, `rect_scale)(1, 1)
 	RECT(
-		_(%(`Time, +(SCREEN_WIDTH, 20)), 20) 10 #MAKE_VEC2,
+		_(%(`time, +(SCREEN_WIDTH, 20)), 20) 10 #MAKE_VEC2,
 		V2(20, 30)
 	)(0, 1)
 	RECT(
@@ -57,6 +60,7 @@ INIT UPDATE
 :%(?a, ?b) ?a ?b #MODULO
 :CONST_RECT(?x, ?y, ?w, ?h) V2(?x, ?y) V2(?w, ?h) #FILL_RECT
 :RECT(?loc, ?size) ?loc ?size #FILL_RECT
+:ADD(?state, ?val) +(?state, ?val) #SET(?state)
 :ADD_X(?state, ?x) +(?state #GET_X, ?x) ?state #GET_Y #MAKE_VEC2 #SET(?state)
 :ADD_Y(?state, ?y) ?state #GET_X +(?state #GET_Y, ?y) #MAKE_VEC2 #SET(?state)
 

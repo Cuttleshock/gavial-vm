@@ -425,8 +425,6 @@ bool run_vm(const char *rom_path)
 		gvm_error("Cannot watch ROM %s for updates\n", rom_path);
 	}
 	bool loop_done = false;
-	int time_index; // TODO: very careful
-	locate_state("Time", 4, &time_index);
 
 	while (!loop_done) {
 		// Check for queued save
@@ -464,7 +462,6 @@ bool run_vm(const char *rom_path)
 					close_vm();
 					vm = old_vm;
 				} else {
-					locate_state("Time", 4, &time_index);
 					struct VM new_vm = vm;
 					vm = old_vm;
 					for (int i = 0; i < new_vm.state_count; ++i) {
@@ -497,7 +494,6 @@ bool run_vm(const char *rom_path)
 
 		// Run VM loop
 		// TODO: lock_input()?
-		++vm.state[time_index].current.scalar;
 		loop_done = update();
 		input();
 		draw(); // TODO: Unlink vsync from update logic
