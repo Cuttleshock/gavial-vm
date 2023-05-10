@@ -41,9 +41,7 @@ static struct table macros_table = {
 	.entries = NULL,
 };
 
-static void print_sentence(Sentence *);
-
-static void print_word(Word *w)
+void print_word(Word *w)
 {
 	switch (w->type) {
 		case WORD_NUMBER:
@@ -77,7 +75,7 @@ static void print_word(Word *w)
 	}
 }
 
-static void print_sentence(Sentence *s)
+void print_sentence(Sentence *s)
 {
 	if (s->word_count == 0) {
 		return;

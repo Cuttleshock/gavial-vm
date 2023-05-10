@@ -106,8 +106,11 @@ static bool push_symbol(Word w, CcmList *list)
 // TODO: Break up this 150-liner
 static bool sentence(Sentence *s, struct call_stack cs, CcmList *list)
 {
+	// Word kept here for traceback on error. Not necessary to initialise as we
+	// can never error without doing so.
+	Word w;
 	for (int i = 0; i < s->word_count && !had_error; ++i) {
-		Word w = s->words[i];
+		w = s->words[i];
 		if (pending_count == 0) {
 			switch (w.type) {
 				case WORD_STRING:
@@ -231,6 +234,13 @@ static bool sentence(Sentence *s, struct call_stack cs, CcmList *list)
 					continue;
 			}
 		}
+	}
+
+	// Traceback - but PARAMETERs and CALLs give no extra information
+	if (had_error && w.type != WORD_PARAMETER && w.type != WORD_CALL) {
+		ccm_log("\tat [%d:%d] (", w.line, w.character);
+		print_word(&w);
+		ccm_log(")\n");
 	}
 
 	return !had_error;

@@ -30,6 +30,8 @@ typedef struct {
 
 typedef struct word {
 	WordType type;
+	int line;
+	int character;
 	union {
 		double number; // WORD_NUMBER
 		struct {
@@ -44,6 +46,8 @@ typedef struct word {
 	} as;
 } Word;
 
+void print_word(Word *word);
+void print_sentence(Sentence *sentence);
 void free_word(Word *word);
 void free_sentence(Sentence *sentence);
 bool define_primitive(const char *name, int name_length, int arg_count, CcmHook hook);

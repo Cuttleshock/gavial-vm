@@ -134,7 +134,7 @@ static Word *next_word_of(Sentence *sentence)
 
 // TODO: Why do we pass Sentence * and not Word * to all of these?
 // Helper to clip string-like Words, omitting ""`# etc.
-static bool stringish(const char *chars, int length, WordType type, Sentence *current)
+static bool stringish(const char *chars, int length, WordType type, int line, int character, Sentence *current)
 {
 	char *str = ccm_malloc(length);
 	if (str == NULL) {
@@ -149,6 +149,8 @@ static bool stringish(const char *chars, int length, WordType type, Sentence *cu
 
 	memcpy(str, chars, length);
 	word->type = type;
+	word->line = line;
+	word->character = character;
 	word->as.str.chars = str;
 	word->as.str.length = length;
 
@@ -208,6 +210,8 @@ static bool string(Token t, Sentence *current)
 	}
 
 	word->type = WORD_STRING;
+	word->line = t.line;
+	word->character = t.character;
 	word->as.str.chars = str;
 	word->as.str.length = length;
 
@@ -231,6 +235,8 @@ static bool number(Token t, Sentence *current)
 	}
 
 	word->type = WORD_NUMBER;
+	word->line = t.line;
+	word->character = t.character;
 	word->as.number = d;
 
 	return true;
@@ -238,17 +244,17 @@ static bool number(Token t, Sentence *current)
 
 static bool macro(Token t, Sentence *current)
 {
-	return stringish(t.chars, t.length, WORD_MACRO, current);
+	return stringish(t.chars, t.length, WORD_MACRO, t.line, t.character, current);
 }
 
 static bool primitive(Token t, Sentence *current)
 {
-	return stringish(t.chars + 1, t.length - 1, WORD_PRIMITIVE, current);
+	return stringish(t.chars + 1, t.length - 1, WORD_PRIMITIVE, t.line, t.character, current);
 }
 
 static bool symbol(Token t, Sentence *current)
 {
-	return stringish(t.chars + 1, t.length - 1, WORD_SYMBOL, current);
+	return stringish(t.chars + 1, t.length - 1, WORD_SYMBOL, t.line, t.character, current);
 }
 
 static bool parameter(Token t, Sentence *current)
@@ -259,6 +265,8 @@ static bool parameter(Token t, Sentence *current)
 			Word *word = next_word_of(current);
 			if (word != NULL) {
 				word->type = WORD_PARAMETER;
+				word->line = t.line;
+				word->character = t.character;
 				word->as.arg_index = i;
 				return true;
 			} else {
@@ -294,6 +302,8 @@ static bool call(Token left_paren, Sentence *current)
 	// so we can leave cleanup to the caller
 
 	word->type = WORD_CALL;
+	word->line = left_paren.line;
+	word->character = left_paren.character;
 	word->as.call.arg_count = 1;
 	word->as.call.args = arglist;
 
