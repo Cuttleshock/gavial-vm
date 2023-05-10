@@ -116,6 +116,16 @@ static void hook_SUBTRACT(CcmList *)
 	instruction(OP_SUBTRACT);
 }
 
+static void hook_LESS_THAN(CcmList *)
+{
+	instruction(OP_LESS_THAN);
+}
+
+static void hook_GREATER_THAN(CcmList *)
+{
+	instruction(OP_GREATER_THAN);
+}
+
 // TODO: Argument checking
 static void hook_VEC2(CcmList lists[])
 {
@@ -206,6 +216,16 @@ static void hook_SPRITE(CcmList lists[])
 	instruction(v_flip);
 }
 
+static void hook_DUP(CcmList *)
+{
+	instruction(OP_DUP);
+}
+
+static void hook_POP(CcmList *)
+{
+	instruction(OP_POP);
+}
+
 static void hook_RETURN(CcmList *)
 {
 	instruction(OP_RETURN);
@@ -259,6 +279,8 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(ADD, 0);
 	TRY(SUBTRACT, 0);
 	TRY(MODULO, 0);
+	TRY(LESS_THAN, 0);
+	TRY(GREATER_THAN, 0);
 	TRY(VEC2, 2);
 	TRY(PRESSED, 1);
 	TRY(MAKE_VEC2, 0);
@@ -270,6 +292,8 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(CAM, 0);
 	TRY(FILL_RECT, 2);
 	TRY(SPRITE, 5);
+	TRY(DUP, 0);
+	TRY(POP, 0);
 	TRY(RETURN, 0);
 
 	if (!ccm_execute(predef_src, predef_length, 1)) {
