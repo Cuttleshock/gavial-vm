@@ -24,6 +24,8 @@ typedef enum {
 	// Booleans
 	OP_LESS_THAN,
 	OP_GREATER_THAN,
+	OP_NOT,
+	OP_AND, // does not short-circuit
 	// Input
 	OP_BUTTON_PRESSED,
 	// Drawing

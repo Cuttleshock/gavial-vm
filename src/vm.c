@@ -150,6 +150,17 @@ static bool update()
 				modify(result);
 				break;
 			}
+			case OP_NOT: {
+				bool a = !peek().as.scalar;
+				modify(SCAL(a));
+				break;
+			}
+			case OP_AND: {
+				uint32_t b = pop().as.scalar;
+				uint32_t a = peek().as.scalar;
+				modify(SCAL(a && b ? 1 : 0));
+				break;
+			}
 			case OP_BUTTON_PRESSED:
 				if (button_pressed(BYTE())) {
 					push(SCAL(1));

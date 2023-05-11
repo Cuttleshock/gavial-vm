@@ -126,6 +126,16 @@ static void hook_GREATER_THAN(CcmList *)
 	instruction(OP_GREATER_THAN);
 }
 
+static void hook_NOT(CcmList *)
+{
+	instruction(OP_NOT);
+}
+
+static void hook_AND(CcmList *)
+{
+	instruction(OP_AND);
+}
+
 // TODO: Argument checking
 static void hook_VEC2(CcmList lists[])
 {
@@ -299,6 +309,8 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(MODULO, 0);
 	TRY(LESS_THAN, 0);
 	TRY(GREATER_THAN, 0);
+	TRY(NOT, 0);
+	TRY(AND, 0);
 	TRY(VEC2, 2);
 	TRY(PRESSED, 1);
 	TRY(MAKE_VEC2, 0);

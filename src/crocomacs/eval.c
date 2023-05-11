@@ -236,8 +236,8 @@ static bool sentence(Sentence *s, struct call_stack cs, CcmList *list)
 		}
 	}
 
-	// Traceback - but PARAMETERs and CALLs give no extra information
-	if (had_error && w.type != WORD_PARAMETER && w.type != WORD_CALL) {
+	// Traceback - but PARAMETERs give no extra information
+	if (had_error && w.type != WORD_PARAMETER) {
 		ccm_log("\tat [%d:%d] (", w.line, w.character);
 		print_word(&w);
 		ccm_log(")\n");

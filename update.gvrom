@@ -21,43 +21,71 @@ INIT UPDATE
 	#BIND_PAL(3, 3)
 	#DEFINE_SCALAR(`time, 0)
 	#DEFINE_VEC2(`camera, 0, 0)
-	#DEFINE_VEC2(`rect_scale, 20, 20)
-	#DEFINE_VEC2(`rect_position, 50, 100)
+	#DEFINE_VEC2(`player_position, 50, 100)
+	#DEFINE_SCALAR(`player_facing, BUTTON_UP)
+	#DEFINE_VEC2(`box, 100, 80)
+	#DEFINE_SCALAR(`attack_timer, 0)
 
 :UPDATE()
 	ADD(`time, 1)
+	IF(>(`attack_timer, 0),
+		ADD(`attack_timer, -1))
 
-	IF(#PRESSED(BUTTON_DOWN),
-		IFNOT(+(`rect_position, V2(0, 13)) #MAP_FLAG(0),
-			ADD(`rect_position, V2(0, 1))),
-		IFYES(#PRESSED(BUTTON_UP),
-			IFNOT(+(`rect_position, V2(0, -1)) #MAP_FLAG(0),
-				ADD(`rect_position, V2(0, -1)))))
+	IFELSE(#PRESSED(BUTTON_DOWN),
+		BUTTON_DOWN #SET(`player_facing)
+		IFNOT(+(`player_position, V2(0, 13)) #MAP_FLAG(0),
+			ADD(`player_position, V2(0, 1))),
+		IF(#PRESSED(BUTTON_UP),
+			BUTTON_UP #SET(`player_facing)
+			IFNOT(+(`player_position, V2(0, -1)) #MAP_FLAG(0),
+				ADD(`player_position, V2(0, -1)))))
 
-	IF(#PRESSED(BUTTON_RIGHT),
-		IFNOT(+(`rect_position, V2(13, 0)) #MAP_FLAG(0),
-			ADD(`rect_position, V2(1, 0))),
-		IFYES(#PRESSED(BUTTON_LEFT),
-			IFNOT(+(`rect_position, V2(-1, 0)) #MAP_FLAG(0),
-				ADD(`rect_position, V2(-1, 0)))))
+	IFELSE(#PRESSED(BUTTON_RIGHT),
+		BUTTON_RIGHT #SET(`player_facing)
+		IFNOT(+(`player_position, V2(10, 0)) #MAP_FLAG(0),
+			ADD(`player_position, V2(1, 0))),
+		IF(#PRESSED(BUTTON_LEFT),
+			BUTTON_LEFT #SET(`player_facing)
+			IFNOT(+(`player_position, V2(1, 0)) #MAP_FLAG(0),
+				ADD(`player_position, V2(-1, 0)))))
 
-	_(`rect_position, V2(86, 86)) #SET(`camera)
+	IF(#PRESSED(BUTTON_B),
+		ATTACK)
+
+	_(`player_position, V2(86, 86)) #SET(`camera)
 	MAKE_VEC2(
 		CLAMP(`camera #GET_X, 0, _(#MAP_WIDTH, SCREEN_WIDTH)),
 		CLAMP(`camera #GET_Y, 0, _(#MAP_HEIGHT, SCREEN_HEIGHT))
 	) #SET(`camera)
-
-	`rect_position #SPRITE(1, 0, 1, false, false)
 	`camera #CAM
 
-:IFNOT(?cond, ?if) IF(?cond, , ?if)
-:IFYES(?cond, ?if) IF(?cond, ?if, )
-:CLAMP(?val, ?min, ?max) IF(IF(?val #DUP ?min #LESS_THAN, #POP ?min,) #DUP ?max #GREATER_THAN, #POP ?max,)
+	IF(>(`attack_timer, 0),
+		V2(30, 30) #SPRITE(0, 2, 1, false, false))
+
+	IFELSE(==(`player_facing, BUTTON_RIGHT),
+		`player_position #SPRITE(1, 2, 1, false, false),
+		IFELSE(==(`player_facing, BUTTON_LEFT),
+			`player_position #SPRITE(1, 2, 1, true, false),
+			IFELSE(==(`player_facing, BUTTON_UP),
+				`player_position #SPRITE(3, 2, 1, false, false),
+				`player_position #SPRITE(2, 2, 1, false, false))))
+
+:ATTACK()
+	IF(<=(`attack_timer, 0),
+		ATTACK_DURATION #SET(`attack_timer))
+
+:ATTACK_DURATION() 30
+:IFNOT(?cond, ?if) IFELSE(?cond, , ?if)
+:IF(?cond, ?if) IFELSE(?cond, ?if, )
+:CLAMP(?val, ?min, ?max) IF(IF(?val #DUP ?min #LESS_THAN, #POP ?min) #DUP ?max #GREATER_THAN, #POP ?max)
 :V2() #VEC2
 :MAKE_VEC2(?x, ?y) ?x ?y #MAKE_VEC2
 :+(?a, ?b) ?a ?b #ADD
 :_(?a, ?b) ?a ?b #SUBTRACT ; '-' reserved :(
 :%(?a, ?b) ?a ?b #MODULO
+:<=(?a, ?b) >(?a, ?b) #NOT
+:>(?a, ?b) ?a ?b #GREATER_THAN
+:==(?a, ?b) >(?a, ?b) #NOT >(?b, ?a) #NOT #AND
 :CONST_RECT(?x, ?y, ?w, ?h) V2(?x, ?y) V2(?w, ?h) #FILL_RECT
 :RECT(?loc, ?size) ?loc ?size #FILL_RECT
 :ADD(?state, ?val) +(?state, ?val) #SET(?state)
@@ -90,6 +118,19 @@ oooooooooooo ..........  .........................o .oo. o....o .oo. o....o .oo.
             ............oooooooooooo..o .oo. o.................................. o. 
             ............oooooooooooo..o .oo. o..ooooooooooooooooooooooooooooooo. o. 
                                     1           1           1           1           
+     oo          o           oo          oo                                         
+    o..o        oooo        oooo        oooo                                        
+    o..o       ooooooo     oooooo      oooooo                                       
+    o..o        ....        ....        ....                                        
+    o..o       ......      ......      ......                                       
+    o..o      ...o..o.    ........    ........                                      
+    o..o      ..oo.oo.    .oo..oo.    ........                                      
+    o..o      ........    ........    ........                                      
+  oooooooo    ........    ........    ........                                      
+    oooo      ........    ........    ........                                      
+    oooo       ..  ..      ..  ..      ..  ..                                       
+    oooo       .   .       ..  ..      ..  ..                                       
+                                                                                    
 
 🐊 MAP
 
