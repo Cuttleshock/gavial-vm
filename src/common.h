@@ -17,6 +17,7 @@
 #define SPRITE_SZ 12
 #define SPRITE_COLS 7
 #define SPRITE_ROWS 100
+#define N_SPRITE_FLAGS 8
 
 void gvm_log(const char *format, ...);
 void gvm_error(const char *format, ...);

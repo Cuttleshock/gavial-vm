@@ -22,6 +22,10 @@ extern struct VM {
 	uint32_t stack_count;
 	GvmConstant constants[256];
 	uint32_t constants_count;
+	// TODO: We don't need sprite_flags. Saving flags directly in 'map' is more
+	// space-efficient, faster and simpler at runtime.
+	uint8_t sprite_flags[SPRITE_COLS * SPRITE_ROWS];
+	uint16_t *map;
 	uint32_t map_width;
 	uint32_t map_height;
 	bool had_error;

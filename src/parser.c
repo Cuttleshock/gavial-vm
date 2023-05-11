@@ -430,8 +430,39 @@ static bool parse_sprite(const char *src, int src_length)
 		}
 
 		// Give data to renderer
+		// TODO: Right now this isn't atomic (if some or all rows succeed before
+		// a failure, those sprites will show their new appearance anyway). This
+		// is inconsistent with atomicity in the VM.
 		if (!define_sprite_row(render_data, n_rows)) {
 			return false;
+		}
+
+		// Consume flags
+		if (tapehead >= end || tapehead == NULL) {
+			gvm_error("Sprite: missing flag row\n");
+			return false;
+		}
+
+		if (line_length(tapehead) != SPRITE_SZ * SPRITE_COLS) {
+			gvm_error("Sprite: flag row improper line length\n");
+			return false;
+		}
+
+		for (int i = 0; i < SPRITE_COLS; ++i) {
+			uint8_t flags = 0;
+			for (int j = 0; j < N_SPRITE_FLAGS; ++j) {
+				char c = tapehead[i * SPRITE_SZ + j];
+				if (' ' == c) {
+					continue;
+				} else if ('1' == c) {
+					flags |= 1u << j;
+				} else {
+					gvm_error("Sprite: flag row unexpected character '%c'\n", c);
+					return false;
+				}
+			}
+
+			set_sprite_flags(flags, n_rows * SPRITE_COLS + i);
 		}
 
 		++n_rows;
@@ -539,6 +570,7 @@ static bool parse_map(const char *src, int src_length)
 		tapehead = next_line(tapehead);
 	}
 
+	// TODO: Renderer atomicity - see define_sprite_row()
 	bool success = register_map(map, width, height);
 	bool vm_success = set_introspection_map(map, width, height);
 	gvm_free(map);

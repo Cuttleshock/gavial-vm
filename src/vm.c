@@ -236,6 +236,10 @@ bool init_vm()
 	vm.state_count = 0;
 	vm.stack_count = 0;
 	vm.constants_count = 0;
+	for (int i = 0; i < sizeof(vm.sprite_flags) / sizeof(vm.sprite_flags[0]); ++i) {
+		vm.sprite_flags[i] = 0;
+	}
+	vm.map = NULL;
 	vm.had_error = false;
 
 	vm.capacity = INSTRUCTIONS_INITIAL_SIZE;
@@ -417,10 +421,23 @@ bool constant(GvmConstant value)
 	return instruction(vm.constants_count++);
 }
 
+void set_sprite_flags(uint8_t flags, int index)
+{
+	vm.sprite_flags[index] = flags;
+}
+
 bool set_introspection_map(const uint8_t (*map)[4], int width, int height)
 {
 	vm.map_width = width;
 	vm.map_height = height;
+	vm.map = gvm_malloc(width * height * sizeof(*vm.map));
+	if (NULL == vm.map) {
+		return false;
+	}
+
+	for (int i = 0; i < width * height; ++i) {
+		vm.map[i] = map[i][0] + map[i][1] * SPRITE_COLS;
+	}
 
 	return true;
 }
@@ -428,6 +445,7 @@ bool set_introspection_map(const uint8_t (*map)[4], int width, int height)
 void close_vm()
 {
 	gvm_free(vm.instructions);
+	gvm_free(vm.map);
 	for (int i = 0; i < vm.state_count; ++i) {
 		gvm_free(vm.state[i].name);
 	}

@@ -46,6 +46,7 @@ bool queue_load(const char *path);
 void queue_save();
 bool run_vm(const char *rom_path);
 void close_vm();
+void set_sprite_flags(uint8_t flags, int index);
 bool set_introspection_map(const uint8_t (*map)[4], int width, int height);
 bool set_state(GvmConstant value, const char *name, int length);
 bool instruction(uint8_t byte);
