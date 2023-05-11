@@ -46,6 +46,7 @@ static int disassemble_instruction(int i)
 		CASE(OP_CAM);
 		CASE(OP_MAP_WIDTH);
 		CASE(OP_MAP_HEIGHT);
+		CASE_BYTE(OP_MAP_FLAG);
 		CASE_2BYTE(OP_FILL_RECT);
 		CASE_5BYTE(OP_SPRITE);
 		CASE(OP_SWAP);

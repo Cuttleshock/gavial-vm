@@ -202,6 +202,13 @@ static void hook_MAP_HEIGHT(CcmList *)
 	instruction(OP_MAP_HEIGHT);
 }
 
+static void hook_MAP_FLAG(CcmList lists[])
+{
+	uint8_t bit = lists[0].values[0].as.number;
+	instruction(OP_MAP_FLAG);
+	instruction(bit);
+}
+
 // TODO: Argument checking
 static void hook_FILL_RECT(CcmList lists[])
 {
@@ -303,6 +310,7 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(CAM, 0);
 	TRY(MAP_WIDTH, 0);
 	TRY(MAP_HEIGHT, 0);
+	TRY(MAP_FLAG, 1);
 	TRY(FILL_RECT, 2);
 	TRY(SPRITE, 5);
 	TRY(DUP, 0);

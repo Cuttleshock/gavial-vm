@@ -179,6 +179,22 @@ static bool update()
 				push(SCAL(vm.map_height * SPRITE_SZ));
 				break;
 			}
+			case OP_MAP_FLAG: {
+				uint8_t bit = 1u << BYTE();
+				GvmConstant where = pop();
+				int x = V2X(where);
+				int y = V2Y(where);
+				if (x < 0 || vm.map_width * SPRITE_SZ <= x || y < 0 || vm.map_height * SPRITE_SZ <= y) {
+					push(SCAL(0));
+				} else {
+					int map_x = x / SPRITE_SZ;
+					int map_y = y / SPRITE_SZ;
+					uint16_t sprite = vm.map[map_x + vm.map_width * map_y];
+					uint8_t flags = vm.sprite_flags[sprite];
+					push(SCAL((flags & bit) ? 1 : 0));
+				}
+				break;
+			}
 			case OP_FILL_RECT: {
 				uint8_t palette = BYTE();
 				uint8_t colour = BYTE();

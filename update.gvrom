@@ -22,20 +22,24 @@ INIT UPDATE
 	#DEFINE_SCALAR(`time, 0)
 	#DEFINE_VEC2(`camera, 0, 0)
 	#DEFINE_VEC2(`rect_scale, 20, 20)
-	#DEFINE_VEC2(`rect_position, 0, 100)
+	#DEFINE_VEC2(`rect_position, 50, 100)
 
 :UPDATE()
 	ADD(`time, 1)
 
-	IF(#PRESSED(BUTTON_UP),
-		ADD_Y(`rect_position, -1),
-		IF(#PRESSED(BUTTON_DOWN),
-			ADD_Y(`rect_position, 1), ))
+	IF(#PRESSED(BUTTON_DOWN),
+		IFNOT(+(`rect_position, V2(0, 13)) #MAP_FLAG(0),
+			ADD(`rect_position, V2(0, 1))),
+		IFYES(#PRESSED(BUTTON_UP),
+			IFNOT(+(`rect_position, V2(0, -1)) #MAP_FLAG(0),
+				ADD(`rect_position, V2(0, -1)))))
 
 	IF(#PRESSED(BUTTON_RIGHT),
-		ADD_X(`rect_position, 1),
-		IF(#PRESSED(BUTTON_LEFT),
-			ADD_X(`rect_position, -1), ))
+		IFNOT(+(`rect_position, V2(13, 0)) #MAP_FLAG(0),
+			ADD(`rect_position, V2(1, 0))),
+		IFYES(#PRESSED(BUTTON_LEFT),
+			IFNOT(+(`rect_position, V2(-1, 0)) #MAP_FLAG(0),
+				ADD(`rect_position, V2(-1, 0)))))
 
 	_(`rect_position, V2(86, 86)) #SET(`camera)
 	MAKE_VEC2(
@@ -46,6 +50,8 @@ INIT UPDATE
 	`rect_position #SPRITE(1, 0, 1, false, false)
 	`camera #CAM
 
+:IFNOT(?cond, ?if) IF(?cond, , ?if)
+:IFYES(?cond, ?if) IF(?cond, ?if, )
 :CLAMP(?val, ?min, ?max) IF(IF(?val #DUP ?min #LESS_THAN, #POP ?min,) #DUP ?max #GREATER_THAN, #POP ?max,)
 :V2() #VEC2
 :MAKE_VEC2(?x, ?y) ?x ?y #MAKE_VEC2
@@ -55,36 +61,34 @@ INIT UPDATE
 :CONST_RECT(?x, ?y, ?w, ?h) V2(?x, ?y) V2(?w, ?h) #FILL_RECT
 :RECT(?loc, ?size) ?loc ?size #FILL_RECT
 :ADD(?state, ?val) +(?state, ?val) #SET(?state)
-:ADD_X(?state, ?x) +(?state #GET_X, ?x) ?state #GET_Y #MAKE_VEC2 #SET(?state)
-:ADD_Y(?state, ?y) ?state #GET_X +(?state #GET_Y, ?y) #MAKE_VEC2 #SET(?state)
 
 🐊 SPRITE
 
- oooooooooo                                                              .o .oo. o. 
-ooooooo.oooo ..........  ....................... .........................o .oo. o..
-ooooooo..ooo .oooooooo.  .oooooooooooooooooooooo .ooooooooooooooooooooooooo .oo. ooo
-ooo.......oo .o      o.  .o                      .o                         .oo.    
-oo........oo .o .... o.  .o .................... .o .........................oo.....
-oo..ooo..ooo .o .oo. o.  .o .ooooooooooooooooooo .o .ooooooooooooooooooooooooooooooo
-oo..ooo.oooo .o .oo. o.  .o .ooooooooooooooooooo .o .ooooooooooooooooooooooooooooooo
-oo..oooooooo .o .... o.  .o .................... .o .oo..........oo..........oo.....
-oo..oooooooo .o      o.  .o                      .o .oo.        .oo.        .oo.    
-oo..oooooooo .oooooooo.  .oooooooooooooooooooooo .o .oo. oooooo .oo. oooooo .oo. ooo
-oooooooooooo ..........  ....................... .o .oo. o....o .oo. o....o .oo. o..
- oooooooooo                                      .o .oo. o.  .o .oo. o.  .o .oo. o. 
+ oooooooooo     oooo                ........................             .o .oo. o. 
+ooooooo.oooo ..........  .................................................o .oo. o..
+ooooooo..ooo .oooooooo.  .oooooooooooooooooooooo..ooooooooooooooooooooooooo .oo. ooo
+ooo.......oo .o      o.  .o                     ..o                         .oo.    
+oo........ooo.o .... o.o .o ......................o .........................oo.....
+oo..ooo..oooo.o .oo. o.o .o .ooooooooooooooooooo..o .ooooooooooooooooooooooooooooooo
+oo..ooo.ooooo.o .oo. o.o .o .ooooooooooooooooooo..o .ooooooooooooooooooooooooooooooo
+oo..ooooooooo.o .... o.o .o ......................o .oo..........oo..........oo.....
+oo..oooooooo .o      o.  .o                     ..o .oo.        .oo.        .oo.    
+oo..oooooooo .oooooooo.  .oooooooooooooooooooooo..o .oo. oooooo .oo. oooooo .oo. ooo
+oooooooooooo ..........  .........................o .oo. o....o .oo. o....o .oo. o..
+ oooooooooo     oooo                ..............o .oo. o.. .o .oo. o.  .o .oo. o. 
             1           1           1           1           1           1           
-            ............oooooooooooo .o .oo. o. ooooooooooooooooooooooooooooooo. o. 
-            ............oooooooooooo .o .oo. o. ................................ o. 
-            ............oooooooooooo .o .oo. o.                                  o. 
-            ............oooooooooooo .o .oo. o. oooooooooooooooooooooooooooooooooo. 
-            ............oooooooooooo .o .oo. o. ................................... 
-            ............oooooooooooo .o .oo. o.                                     
-            ............oooooooooooo .o .oo. o.                                     
-            ............oooooooooooo .o .oo. o. ................................... 
-            ............oooooooooooo .o .oo. o. oooooooooooooooooooooooooooooooooo. 
-            ............oooooooooooo .o .oo. o.                                  o. 
-            ............oooooooooooo .o .oo. o. ................................ o. 
-            ............oooooooooooo .o .oo. o. ooooooooooooooooooooooooooooooo. o. 
+            ............oooooooooooo..o .oo. o..ooooooooooooooooooooooooooooooo. o. 
+            ............oooooooooooo..o .oo. o.................................. o. 
+            ............oooooooooooo..o .oo. o..                                 o. 
+            ............oooooooooooo..o .oo. o..oooooooooooooooooooooooooooooooooo. 
+            ............oooooooooooo..o .oo. o..................................... 
+            ............oooooooooooo..o .oo. o..                                    
+            ............oooooooooooo..o .oo. o..                                    
+            ............oooooooooooo..o .oo. o..................................... 
+            ............oooooooooooo..o .oo. o..oooooooooooooooooooooooooooooooooo. 
+            ............oooooooooooo..o .oo. o..                                 o. 
+            ............oooooooooooo..o .oo. o.................................. o. 
+            ............oooooooooooo..o .oo. o..ooooooooooooooooooooooooooooooo. o. 
                                     1           1           1           1           
 
 🐊 MAP
