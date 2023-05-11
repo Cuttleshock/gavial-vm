@@ -390,14 +390,15 @@ static const char *find_line(const char *str, const char *line)
 
 static bool parse_sprite(const char *src, int src_length)
 {
+	// Skip empty lines
+	const char *tapehead = src;
 	const char *end = &src[src_length];
-	int n_rows = 0;
-	for (const char *tapehead = src; tapehead < end && tapehead != NULL; tapehead = next_line(tapehead)) {
-		// Skip empty lines
-		if (line_length(tapehead) == 0) {
-			continue;
-		}
+	while (tapehead < end && tapehead != NULL && line_length(tapehead) == 0) {
+		tapehead = next_line(tapehead);
+	}
 
+	int n_rows = 0;
+	while (tapehead < end && tapehead != NULL && line_length(tapehead) > 0) {
 		// Consume a row of sprites
 		uint8_t render_data[SPRITE_SZ * SPRITE_SZ * SPRITE_COLS];
 		for (int i = 0; i < SPRITE_SZ; ++i) {
@@ -465,6 +466,7 @@ static bool parse_sprite(const char *src, int src_length)
 			set_sprite_flags(flags, n_rows * SPRITE_COLS + i);
 		}
 
+		tapehead = next_line(tapehead);
 		++n_rows;
 	}
 
