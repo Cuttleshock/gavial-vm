@@ -29,6 +29,8 @@ typedef enum {
 	// Drawing
 	OP_LOAD_PAL,
 	OP_CAM,
+	OP_MAP_WIDTH,
+	OP_MAP_HEIGHT,
 	OP_FILL_RECT,
 	OP_SPRITE,
 	// Stack manipulation
@@ -44,6 +46,7 @@ bool queue_load(const char *path);
 void queue_save();
 bool run_vm(const char *rom_path);
 void close_vm();
+bool set_introspection_map(const uint8_t (*map)[4], int width, int height);
 bool set_state(GvmConstant value, const char *name, int length);
 bool instruction(uint8_t byte);
 bool state_instruction(uint8_t byte, const char *name, int length);

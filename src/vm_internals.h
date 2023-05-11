@@ -22,6 +22,8 @@ extern struct VM {
 	uint32_t stack_count;
 	GvmConstant constants[256];
 	uint32_t constants_count;
+	uint32_t map_width;
+	uint32_t map_height;
 	bool had_error;
 } vm;
 

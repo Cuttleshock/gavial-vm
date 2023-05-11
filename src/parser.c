@@ -191,6 +191,17 @@ static void hook_CAM(CcmList[])
 	instruction(OP_CAM);
 }
 
+// These two could be static but it's a little more error-prone to make them so
+static void hook_MAP_WIDTH(CcmList *)
+{
+	instruction(OP_MAP_WIDTH);
+}
+
+static void hook_MAP_HEIGHT(CcmList *)
+{
+	instruction(OP_MAP_HEIGHT);
+}
+
 // TODO: Argument checking
 static void hook_FILL_RECT(CcmList lists[])
 {
@@ -290,6 +301,8 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(JUMP_AND_POP, 0);
 	TRY(POP_JUMP, 0);
 	TRY(CAM, 0);
+	TRY(MAP_WIDTH, 0);
+	TRY(MAP_HEIGHT, 0);
 	TRY(FILL_RECT, 2);
 	TRY(SPRITE, 5);
 	TRY(DUP, 0);
@@ -527,8 +540,9 @@ static bool parse_map(const char *src, int src_length)
 	}
 
 	bool success = register_map(map, width, height);
+	bool vm_success = set_introspection_map(map, width, height);
 	gvm_free(map);
-	return success;
+	return success && vm_success;
 }
 
 bool load_rom(const char *path)

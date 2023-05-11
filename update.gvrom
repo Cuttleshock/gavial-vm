@@ -20,7 +20,7 @@ INIT UPDATE
 	#SET_PAL(3, 2, 1.0, 1.0, 1.0)
 	#BIND_PAL(3, 3)
 	#DEFINE_SCALAR(`time, 0)
-	#DEFINE_VEC2(`badgers, 50, 100)
+	#DEFINE_VEC2(`camera, 0, 0)
 	#DEFINE_VEC2(`rect_scale, 20, 20)
 	#DEFINE_VEC2(`rect_position, 0, 100)
 
@@ -37,24 +37,18 @@ INIT UPDATE
 		IF(#PRESSED(BUTTON_LEFT),
 			ADD_X(`rect_position, -1), ))
 
-	_(`rect_position, V2(86, 86)) #CAM
+	_(`rect_position, V2(86, 86)) #SET(`camera)
+	MAKE_VEC2(
+		CLAMP(`camera #GET_X, 0, _(#MAP_WIDTH, SCREEN_WIDTH)),
+		CLAMP(`camera #GET_Y, 0, _(#MAP_HEIGHT, SCREEN_HEIGHT))
+	) #SET(`camera)
 
 	`rect_position #SPRITE(1, 0, 1, false, false)
-	RECT(
-		_(%(`time, +(SCREEN_WIDTH, 20)), 20) 10 #MAKE_VEC2,
-		V2(20, 30)
-	)(2, 1)
-	RECT(
-		V2(40, 30),
-		`badgers
-	)(2, 2)
-	V2(0, 80) #SPRITE(0, 0, 1, false, false)
-	V2(20, 80) #SPRITE(0, 0, 1, true, false)
-	V2(0, 100) #SPRITE(0, 0, 1, false, true)
-	V2(20, 100) #SPRITE(0, 0, 1, true, true)
-	#RETURN
+	`camera #CAM
 
+:CLAMP(?val, ?min, ?max) IF(IF(?val #DUP ?min #LESS_THAN, #POP ?min,) #DUP ?max #GREATER_THAN, #POP ?max,)
 :V2() #VEC2
+:MAKE_VEC2(?x, ?y) ?x ?y #MAKE_VEC2
 :+(?a, ?b) ?a ?b #ADD
 :_(?a, ?b) ?a ?b #SUBTRACT ; '-' reserved :(
 :%(?a, ?b) ?a ?b #MODULO
@@ -94,83 +88,39 @@ oooooooooooo ..........  ....................... .o .oo. o....o .oo. o....o .oo.
 
 🐊 MAP
 
-a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01e00d00d00d00d00d00d00d00d00d00d00d00d00e00a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                              h                                                 
-b01a01d01a01a01a01a01a01a01a01a01a01a01a01a01d01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01d01a01a01a01a01a01a01a01a01a01a01a01a01d01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01d01a01a01a01a01a01a01a01a01a01a01a01a01d01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01d01a01a01a01a01a01a01a01a01a01a01a01a01d01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01d01a01a01a01a01a01a01a01a01a01a01a01a01d01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01d01a01a01a01a01a01a01a01a01a01a01a01a01d01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01e00d00d00d00d00d00d00d00d00d00d00d00d00e00b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-        v                                     hv                                                
-a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
-a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
-                                                                                                
-b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
-                                                                                                
+a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                      
+b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                      
+a01b01e00d00d00d00d00d00d00d00d00d00d00d00d00e00a01b01
+                                              h       
+b01a01d01a01a01a01a01a01a01a01a01a01a01a01a01d01b01a01
+                                                      
+a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01
+                                                      
+b01a01d01a01a01a01a01a01a01a01a01a01a01a01a01d01b01a01
+                                                      
+a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01
+                                                      
+b01a01d01a01a01a01a01a01a01a01a01a01a01a01a01d01b01a01
+                                                      
+a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01
+                                                      
+b01a01d01a01a01a01a01a01a01a01a01a01a01a01a01d01b01a01
+                                                      
+a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01
+                                                      
+b01a01d01a01a01a01a01a01a01a01a01a01a01a01a01d01b01a01
+                                                      
+a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01
+                                                      
+b01a01d01a01a01a01a01a01a01a01a01a01a01a01a01d01b01a01
+                                                      
+a01b01d01a01a01a01a01a01a01a01a01a01a01a01a01d01a01b01
+                                                      
+b01a01e00d00d00d00d00d00d00d00d00d00d00d00d00e00b01a01
+        v                                     hv      
+a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01
+                                                      
+b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01b01a01
+                                                      

@@ -171,6 +171,14 @@ static bool update()
 				set_camera(V2X(where), V2Y(where));
 				break;
 			}
+			case OP_MAP_WIDTH: {
+				push(SCAL(vm.map_width * SPRITE_SZ));
+				break;
+			}
+			case OP_MAP_HEIGHT: {
+				push(SCAL(vm.map_height * SPRITE_SZ));
+				break;
+			}
 			case OP_FILL_RECT: {
 				uint8_t palette = BYTE();
 				uint8_t colour = BYTE();
@@ -407,6 +415,14 @@ bool constant(GvmConstant value)
 
 	vm.constants[vm.constants_count] = value;
 	return instruction(vm.constants_count++);
+}
+
+bool set_introspection_map(const uint8_t (*map)[4], int width, int height)
+{
+	vm.map_width = width;
+	vm.map_height = height;
+
+	return true;
 }
 
 void close_vm()
