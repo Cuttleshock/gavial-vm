@@ -47,6 +47,7 @@ typedef enum {
 bool init_vm();
 bool queue_load(const char *path);
 void queue_save();
+void queue_reload();
 bool run_vm(const char *rom_path);
 void close_vm();
 void set_sprite_flags(uint8_t flags, int index);

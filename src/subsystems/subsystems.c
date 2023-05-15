@@ -29,7 +29,7 @@ static void glfw_drop_callback(GLFWwindow *window, int path_count, const char *p
 	}
 }
 
-bool init_subsystems(int window_width, int window_height, int pixel_scale, const char *title, FileCb file_cb, void (*save_cb)(void))
+bool init_subsystems(int window_width, int window_height, int pixel_scale, const char *title, FileCb file_cb, void (*save_cb)(void), void (*reload_cb)(void))
 {
 	glfwSetErrorCallback(glfw_error_callback);
 	if (!glfwInit()) {
@@ -37,7 +37,7 @@ bool init_subsystems(int window_width, int window_height, int pixel_scale, const
 	}
 
 	on_file_drop = file_cb;
-	if (!init_window(window_width * pixel_scale, window_height * pixel_scale, title, glfw_drop_callback, save_cb)) {
+	if (!init_window(window_width * pixel_scale, window_height * pixel_scale, title, glfw_drop_callback, save_cb, reload_cb)) {
 		glfwTerminate();
 		return false;
 	}

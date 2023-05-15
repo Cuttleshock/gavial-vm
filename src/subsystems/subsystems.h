@@ -8,7 +8,7 @@ typedef bool (*FileCb)(const char *path);
 
 // TODO: The only real reason other headers are hidden is for the convenience
 // of draw(). Suggest removing this indirection.
-bool init_subsystems(int window_width, int window_height, int pixel_scale, const char *title, FileCb file_cb, void (*save_cb)(void));
+bool init_subsystems(int window_width, int window_height, int pixel_scale, const char *title, FileCb file_cb, void (*save_cb)(void), void (*reload_cb)(void));
 void input();
 bool button_pressed(int button);
 bool bind_palette(uint8_t bind_point, uint8_t target);

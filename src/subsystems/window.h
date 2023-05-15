@@ -11,7 +11,7 @@
 #include "src/common.h"
 
 bool window_should_close_impl();
-bool init_window(int window_width, int window_height, const char *title, GLFWdropfun drop_callback, void (*save_cb)(void));
+bool init_window(int window_width, int window_height, const char *title, GLFWdropfun drop_callback, void (*save_cb)(void), void (*reload_cb)(void));
 void input_impl();
 bool button_pressed_impl(int button);
 void swap_buffers();

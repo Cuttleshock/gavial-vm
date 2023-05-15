@@ -16,6 +16,7 @@
 struct VM vm;
 char *queued_load_path = NULL;
 bool will_save_state = false;
+bool will_reload = false;
 
 static void runtime_error(const char *message)
 {
@@ -298,6 +299,11 @@ void queue_save()
 	will_save_state = true;
 }
 
+void queue_reload()
+{
+	will_reload = true;
+}
+
 // Return value: true if named state is defined
 // If true, *index contains its location; else, the proper insertion location
 // to maintain order
@@ -509,6 +515,24 @@ bool run_vm(const char *rom_path)
 			}
 		}
 
+		// Check for queued reload
+		if (will_reload) {
+			will_reload = false;
+			struct VM old_vm = vm;
+			init_vm();
+			if (!load_rom(rom_path)) {
+				gvm_error("Error reloading ROM %s\n", rom_path);
+				close_vm();
+				vm = old_vm;
+			} else {
+				struct VM new_vm = vm;
+				vm = old_vm;
+				close_vm();
+				vm = new_vm;
+			}
+			input();
+		}
+
 		// Re-parse ROM if appropriate
 		if (rom_timestamp != MODIFY_ERROR) {
 			time_t new_timestamp = last_modified(rom_path);
@@ -525,6 +549,7 @@ bool run_vm(const char *rom_path)
 					close_vm();
 					vm = old_vm;
 				} else {
+					// Recover old state
 					struct VM new_vm = vm;
 					vm = old_vm;
 					for (int i = 0; i < new_vm.state_count; ++i) {

@@ -39,6 +39,7 @@ static bool button_initial_press[BUTTON_MAX];
 static bool button_latest_press[BUTTON_MAX];
 
 static void (*on_save)(void) = NULL;
+static void (*on_reload)(void) = NULL;
 
 static GLFWwindow *window = NULL;
 
@@ -67,6 +68,13 @@ static void glfw_key_callback(GLFWwindow *window, int key, int scancode, int act
 		return;
 	}
 
+	if (key == GLFW_KEY_R && action == GLFW_PRESS && (mods & GLFW_MOD_CONTROL)) {
+		if (NULL != on_reload) {
+			on_reload();
+		}
+		return;
+	}
+
 	for (Button button = 0; button < BUTTON_MAX; ++button) {
 		if (key_registered_to(key, button)) {
 			// Awkward dance to account for GLFW_REPEAT
@@ -84,7 +92,7 @@ bool window_should_close_impl()
 	return glfwWindowShouldClose(window);
 }
 
-bool init_window(int window_width, int window_height, const char *title, GLFWdropfun drop_callback, void (*save_cb)(void))
+bool init_window(int window_width, int window_height, const char *title, GLFWdropfun drop_callback, void (*save_cb)(void), void (*reload_cb)(void))
 {
 	// TODO: More error checking
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -107,6 +115,7 @@ bool init_window(int window_width, int window_height, const char *title, GLFWdro
 	}
 
 	on_save = save_cb;
+	on_reload = reload_cb;
 
 	return true;
 }
