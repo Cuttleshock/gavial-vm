@@ -153,7 +153,7 @@ static bool table_set(struct table *table, const char *key, int key_length, stru
 	if (table->count >= table->capacity * LOAD_LIMIT) { // Similar to parser::start_macro_def()
 		// Allocate a new table
 		struct table old_table = *table;
-		table->capacity = (table->count == 0) ? 8 : 2 * table->count; // TODO: Magic number
+		table->capacity = (table->capacity == 0) ? 8 : 2 * table->capacity; // TODO: Magic number
 		// table->count stays the same as we quietly move entries into it
 		table->entries = ccm_malloc(table->capacity * sizeof(*table->entries));
 		if (NULL == table->entries) {
