@@ -379,7 +379,9 @@ bool set_state(GvmConstant value, const char *name, int length)
 bool instruction(uint8_t byte)
 {
 	if (vm.count >= vm.capacity) {
-		vm.instructions = gvm_realloc(vm.instructions, vm.capacity, 2 * vm.capacity);
+		uint32_t old_capacity = vm.capacity;
+		vm.capacity = 2 * old_capacity;
+		vm.instructions = gvm_realloc(vm.instructions, old_capacity, vm.capacity);
 		if (NULL == vm.instructions) {
 			return false;
 		}
