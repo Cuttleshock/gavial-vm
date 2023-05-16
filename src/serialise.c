@@ -32,9 +32,6 @@ bool serialise(const char *name, GvmConstant value)
 		case VAL_VEC2:
 			success = fprintf(open_file, "#LOAD_VEC2(`%s, %d, %d)\n", name, V2X(value), V2Y(value));
 			break;
-		case VAL_VEC4:
-			success = fprintf(open_file, "#LOAD_VEC4(`%s, %d, %d, %d, %d)\n", name, V4X(value), V4Y(value), V4Z(value), V4W(value));
-			break;
 	}
 
 	// TODO: On failure, it makes sense to close the handle and delete the file

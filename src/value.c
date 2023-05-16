@@ -11,8 +11,6 @@ GvmConstant add_vals(GvmConstant a, GvmConstant b)
 			return SCAL(a.as.scalar + b.as.scalar);
 		case VAL_VEC2:
 			return VEC2(a.as.vec2[0] + b.as.vec2[0], a.as.vec2[1] + b.as.vec2[1]);
-		case VAL_VEC4:
-			return VEC4(a.as.vec4[0] + b.as.vec4[0], a.as.vec4[1] + b.as.vec4[1], a.as.vec4[2] + b.as.vec4[2], a.as.vec4[3] + b.as.vec4[3]);
 	}
 
 	return SCAL(0); // Unreachable
@@ -26,8 +24,6 @@ GvmConstant subtract_vals(GvmConstant a, GvmConstant b)
 			return SCAL(a.as.scalar - b.as.scalar);
 		case VAL_VEC2:
 			return VEC2(a.as.vec2[0] - b.as.vec2[0], a.as.vec2[1] - b.as.vec2[1]);
-		case VAL_VEC4:
-			return VEC4(a.as.vec4[0] - b.as.vec4[0], a.as.vec4[1] - b.as.vec4[1], a.as.vec4[2] - b.as.vec4[2], a.as.vec4[3] - b.as.vec4[3]);
 	}
 
 	return SCAL(0); // Unreachable
@@ -55,9 +51,6 @@ void print_value(GvmConstant val)
 			return;
 		case VAL_VEC2:
 			printf("(%d, %d)", val.as.vec2[0], val.as.vec2[1]);
-			return;
-		case VAL_VEC4:
-			printf("(%d, %d, %d, %d)", val.as.vec4[0], val.as.vec4[1], val.as.vec4[2], val.as.vec4[3]);
 			return;
 	}
 }

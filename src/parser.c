@@ -60,23 +60,6 @@ static void hook_DEFINE_VEC2(CcmList lists[])
 	gvm_free(name_copy);
 }
 
-static void hook_DEFINE_VEC4(CcmList lists[])
-{
-	const char *name = lists[0].values[0].as.str.chars;
-	int length = lists[0].values[0].as.str.length;
-	GvmConstant value = VEC4(
-		lists[1].values[0].as.number,
-		lists[2].values[0].as.number,
-		lists[3].values[0].as.number,
-		lists[4].values[0].as.number
-	);
-	char *name_copy = gvm_malloc(length + 1);
-	memcpy(name_copy, name, length);
-	name_copy[length] = '\0';
-	define_state(value, name_copy);
-	gvm_free(name_copy);
-}
-
 static void hook_SET_PAL(CcmList lists[])
 {
 	int pal = lists[0].values[0].as.number;
@@ -276,17 +259,6 @@ static void save_hook_LOAD_VEC2(CcmList lists[])
 	set_state(VEC2(x, y), name, length);
 }
 
-static void save_hook_LOAD_VEC4(CcmList lists[])
-{
-	const char *name = lists[0].values[0].as.str.chars;
-	int length = lists[0].values[0].as.str.length;
-	int x = lists[1].values[0].as.number;
-	int y = lists[2].values[0].as.number;
-	int z = lists[3].values[0].as.number;
-	int w = lists[4].values[0].as.number;
-	set_state(VEC4(x, y, z, w), name, length);
-}
-
 static bool parse_update_impl(const char *src, int src_length, const char *predef_src, int predef_length, int initial_line)
 {
 #define TRY(name, arg_count) \
@@ -300,7 +272,6 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 
 	TRY(DEFINE_SCALAR, 2);
 	TRY(DEFINE_VEC2, 3);
-	TRY(DEFINE_VEC4, 5);
 	TRY(SET_PAL, 5);
 	TRY(BIND_PAL, 2);
 	TRY(SET, 1);
@@ -671,7 +642,6 @@ static bool load_state_impl(const char *src, int src_length)
 
 	TRY(LOAD_SCALAR, 2);
 	TRY(LOAD_VEC2, 3);
-	TRY(LOAD_VEC4, 5);
 
 	return ccm_execute(src, src_length, 1);
 
