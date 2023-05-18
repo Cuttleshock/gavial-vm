@@ -7,9 +7,7 @@
 
 typedef struct {
 	char *name;
-	GvmLiteral init;
-	GvmLiteral current;
-	GvmValType type;
+	GvmConstant value;
 } GvmState;
 
 extern struct VM {

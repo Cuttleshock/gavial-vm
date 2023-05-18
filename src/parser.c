@@ -21,7 +21,7 @@ static void *gvm_ccm_realloc_wrapper(void *ptr, size_t size)
 
 static void hook_number(double d)
 {
-	constant(SCAL(d));
+	constant(double_to_scalar(d));
 }
 
 static void hook_string(const char *str, int length)
@@ -38,7 +38,7 @@ static void hook_DEFINE_SCALAR(CcmList lists[])
 {
 	const char *name = lists[0].values[0].as.str.chars;
 	int length = lists[0].values[0].as.str.length;
-	GvmConstant value = SCAL(lists[1].values[0].as.number);
+	GvmConstant value = double_to_scalar(lists[1].values[0].as.number);
 	// TODO: Not bothered to error-check this because we should null-terminate
 	// CcmValue strings anyway
 	char *name_copy = gvm_malloc(length + 1);
@@ -52,7 +52,7 @@ static void hook_DEFINE_VEC2(CcmList lists[])
 {
 	const char *name = lists[0].values[0].as.str.chars;
 	int length = lists[0].values[0].as.str.length;
-	GvmConstant value = VEC2(lists[1].values[0].as.number, lists[2].values[0].as.number);
+	GvmConstant value = double_to_vec2(lists[1].values[0].as.number, lists[2].values[0].as.number);
 	char *name_copy = gvm_malloc(length + 1);
 	memcpy(name_copy, name, length);
 	name_copy[length] = '\0';
@@ -122,9 +122,9 @@ static void hook_AND(CcmList *)
 // TODO: Argument checking
 static void hook_VEC2(CcmList lists[])
 {
-	int a = lists[0].values[0].as.number;
-	int b = lists[1].values[0].as.number;
-	constant(VEC2(a, b)); // TODO: ... and error checking
+	double a = lists[0].values[0].as.number;
+	double b = lists[1].values[0].as.number;
+	constant(double_to_vec2(a, b)); // TODO: ... and error checking
 }
 
 static void hook_MAKE_VEC2(CcmList lists[])
@@ -246,17 +246,17 @@ static void save_hook_LOAD_SCALAR(CcmList lists[])
 {
 	const char *name = lists[0].values[0].as.str.chars;
 	int length = lists[0].values[0].as.str.length;
-	int scalar = lists[1].values[0].as.number;
-	set_state(SCAL(scalar), name, length);
+	const char *x = lists[1].values[0].as.str.chars;
+	set_state(scan_scalar(x), name, length);
 }
 
 static void save_hook_LOAD_VEC2(CcmList lists[])
 {
 	const char *name = lists[0].values[0].as.str.chars;
 	int length = lists[0].values[0].as.str.length;
-	int x = lists[1].values[0].as.number;
-	int y = lists[2].values[0].as.number;
-	set_state(VEC2(x, y), name, length);
+	const char *x = lists[1].values[0].as.str.chars;
+	const char *y = lists[2].values[0].as.str.chars;
+	set_state(scan_vec2(x, y), name, length);
 }
 
 static bool parse_update_impl(const char *src, int src_length, const char *predef_src, int predef_length, int initial_line)

@@ -62,6 +62,8 @@ static int disassemble_instruction(int i)
 	}
 
 #undef CASE_32BIT
+#undef CASE_5BYTE
+#undef CASE_3BYTE
 #undef CASE_2BYTE
 #undef CASE_BYTE
 #undef CASE
@@ -69,15 +71,13 @@ static int disassemble_instruction(int i)
 
 void disassemble()
 {
-	printf("🐊 State\n");
+	gvm_log("🐊 State\n");
 	for (int i = 0; i < vm.state_count; ++i) {
-		printf("%s: ", vm.state[i].name);
-		print_value(CONSTANT(vm.state[i].init, vm.state[i].type));
-		printf(" -> ");
-		print_value(CONSTANT(vm.state[i].current, vm.state[i].type));
-		printf("\n");
+		gvm_log("%s: ", vm.state[i].name);
+		print_value(vm.state[i].value);
+		gvm_log("\n");
 	}
 
-	printf("🐊 Update\n");
+	gvm_log("🐊 Update\n");
 	for (int i = 0; i < vm.count; i = disassemble_instruction(i)) {}
 }

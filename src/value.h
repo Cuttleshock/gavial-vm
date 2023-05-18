@@ -3,36 +3,41 @@
 
 #include "common.h"
 
-#define LIT_SCAL(x)          ((GvmLiteral){ .scalar=(x) })
-#define LIT_VEC2(x, y)       ((GvmLiteral){ .vec2={ (uint16_t)(x), (uint16_t)(y) } })
-
-#define CONSTANT(lit, _type)   ((GvmConstant){ .as=(lit), .type=(_type) })
-#define SCAL(x)                CONSTANT(LIT_SCAL(x), VAL_SCALAR)
-#define VEC2(x, y)             CONSTANT(LIT_VEC2(x, y), VAL_VEC2)
-
-#define V2X(constant) ((constant).as.vec2[0])
-#define V2Y(constant) ((constant).as.vec2[1])
-
-typedef enum {
-	VAL_SCALAR,
-	VAL_VEC2,
-} GvmValType;
-
-typedef union {
-	int32_t scalar;
-	int16_t vec2[2];
-} GvmLiteral;
+typedef int64_t FixedPoint;
 
 typedef struct {
-	GvmLiteral as;
-	GvmValType type;
+	union {
+		FixedPoint scalar;
+		FixedPoint vec2[2];
+	} as;
+	enum {
+		VAL_SCALAR,
+		VAL_VEC2,
+	} type;
 } GvmConstant;
 
 GvmConstant add_vals(GvmConstant a, GvmConstant b);
 GvmConstant subtract_vals(GvmConstant a, GvmConstant b);
 GvmConstant val_less_than(GvmConstant a, GvmConstant b);
 GvmConstant val_greater_than(GvmConstant a, GvmConstant b);
+GvmConstant val_modulus(GvmConstant a, GvmConstant b);
+GvmConstant val_vec2_get_x(GvmConstant v);
+GvmConstant val_vec2_get_y(GvmConstant v);
+GvmConstant val_vec2_make(GvmConstant x, GvmConstant y);
+GvmConstant val_falsify(GvmConstant b);
+GvmConstant val_and(GvmConstant a, GvmConstant b);
 
+void sprint_scalar(char *buffer, GvmConstant value);
+void sprint_vec2_x(char *buffer, GvmConstant value);
+void sprint_vec2_y(char *buffer, GvmConstant value);
 void print_value(GvmConstant val);
+
+int vec2_get_x(GvmConstant v);
+int vec2_get_y(GvmConstant v);
+
+GvmConstant scan_scalar(const char *str);
+GvmConstant scan_vec2(const char *str_x, const char *str_y);
+GvmConstant double_to_scalar(double x);
+GvmConstant double_to_vec2(double x, double y);
 
 #endif // VALUE_H

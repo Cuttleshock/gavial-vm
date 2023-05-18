@@ -77,13 +77,12 @@ static bool update()
 		switch (BYTE()) {
 			case OP_SET: {
 				uint8_t index = BYTE();
-				GvmConstant val = pop();
-				vm.state[index].current = val.as;
+				vm.state[index].value = pop();
 				break;
 			}
 			case OP_GET: {
 				uint8_t index = BYTE();
-				push((GvmConstant){ vm.state[index].current, vm.state[index].type });
+				push(vm.state[index].value);
 				break;
 			}
 			case OP_LOAD_CONST: {
@@ -108,19 +107,19 @@ static bool update()
 			case OP_MODULO: {
 				GvmConstant b = pop();
 				GvmConstant a = peek();
-				modify(SCAL(a.as.scalar % b.as.scalar));
+				modify(val_modulus(a, b));
 				break;
 			}
 			case OP_GET_X:
-				modify(SCAL(peek().as.vec2[0]));
+				modify(val_vec2_get_x(peek()));
 				break;
 			case OP_GET_Y:
-				modify(SCAL(peek().as.vec2[1]));
+				modify(val_vec2_get_y(peek()));
 				break;
 			case OP_MAKE_VEC2:
 				GvmConstant y = pop();
 				GvmConstant x = peek();
-				modify(VEC2(x.as.scalar, y.as.scalar));
+				modify(val_vec2_make(x, y));
 				break;
 			case OP_JUMP_IF_FALSE: {
 				GvmConstant condition = pop();
@@ -152,21 +151,21 @@ static bool update()
 				break;
 			}
 			case OP_NOT: {
-				bool a = !peek().as.scalar;
-				modify(SCAL(a));
+				GvmConstant a = peek();
+				modify(val_falsify(a));
 				break;
 			}
 			case OP_AND: {
-				uint32_t b = pop().as.scalar;
-				uint32_t a = peek().as.scalar;
-				modify(SCAL(a && b ? 1 : 0));
+				GvmConstant b = pop();
+				GvmConstant a = peek();
+				modify(val_and(a, b));
 				break;
 			}
 			case OP_BUTTON_PRESSED:
 				if (button_pressed(BYTE())) {
-					push(SCAL(1));
+					push(double_to_scalar(1));
 				} else {
-					push(SCAL(0));
+					push(double_to_scalar(0));
 				}
 				break;
 			case OP_LOAD_PAL: {
@@ -180,30 +179,30 @@ static bool update()
 			}
 			case OP_CAM: {
 				GvmConstant where = pop();
-				set_camera(V2X(where), V2Y(where));
+				set_camera(vec2_get_x(where), vec2_get_y(where));
 				break;
 			}
 			case OP_MAP_WIDTH: {
-				push(SCAL(vm.map_width * SPRITE_SZ));
+				push(double_to_scalar(vm.map_width * SPRITE_SZ));
 				break;
 			}
 			case OP_MAP_HEIGHT: {
-				push(SCAL(vm.map_height * SPRITE_SZ));
+				push(double_to_scalar(vm.map_height * SPRITE_SZ));
 				break;
 			}
 			case OP_MAP_FLAG: {
 				uint8_t bit = 1u << BYTE();
 				GvmConstant where = pop();
-				int x = V2X(where);
-				int y = V2Y(where);
+				int x = vec2_get_x(where);
+				int y = vec2_get_y(where);
 				if (x < 0 || vm.map_width * SPRITE_SZ <= x || y < 0 || vm.map_height * SPRITE_SZ <= y) {
-					push(SCAL(0));
+					push(double_to_scalar(0));
 				} else {
 					int map_x = x / SPRITE_SZ;
 					int map_y = y / SPRITE_SZ;
 					uint16_t sprite = vm.map[map_x + vm.map_width * map_y];
 					uint8_t flags = vm.sprite_flags[sprite];
-					push(SCAL((flags & bit) ? 1 : 0));
+					push(double_to_scalar((flags & bit) ? 1 : 0));
 				}
 				break;
 			}
@@ -212,7 +211,7 @@ static bool update()
 				uint8_t colour = BYTE();
 				GvmConstant scale = pop();
 				GvmConstant position = pop();
-				if (!fill_rect(V2X(position), V2Y(position), V2X(scale), V2Y(scale), palette, colour)) {
+				if (!fill_rect(vec2_get_x(position), vec2_get_y(position), vec2_get_x(scale), vec2_get_y(scale), palette, colour)) {
 					runtime_error("Failed to draw rectangle");
 				}
 				break;
@@ -224,7 +223,7 @@ static bool update()
 				uint8_t h_flip = BYTE();
 				uint8_t v_flip = BYTE();
 				GvmConstant position = pop();
-				if (!sprite(V2X(position), V2Y(position), sheet_x, sheet_y, palette, h_flip, v_flip)) {
+				if (!sprite(vec2_get_x(position), vec2_get_y(position), sheet_x, sheet_y, palette, h_flip, v_flip)) {
 					runtime_error("Failed to draw sprite");
 				}
 				break;
@@ -242,10 +241,12 @@ static bool update()
 			case OP_POP:
 				pop();
 				break;
-			case OP_PRINT:
-				print_value(pop());
+			case OP_PRINT: {
+				GvmConstant val = pop();
+				print_value(val);
 				gvm_log("\n");
 				break;
+			}
 			case OP_RETURN:
 				break;
 			default: // Unreachable if our parser works correctly
@@ -358,9 +359,7 @@ bool define_state(GvmConstant value, const char *name)
 
 	GvmState *state = &vm.state[index];
 	state->name = own_name;
-	state->init = value.as;
-	state->current = value.as;
-	state->type = value.type;
+	state->value = value;
 	++vm.state_count;
 
 	return true;
@@ -373,10 +372,10 @@ bool set_state(GvmConstant value, const char *name, int length)
 	bool found = locate_state(name, length, &index);
 	if (!found) {
 		return false;
-	} else if (vm.state[index].type != value.type) {
+	} else if (vm.state[index].value.type != value.type) {
 		return false;
 	} else {
-		vm.state[index].current = value.as;
+		vm.state[index].value = value;
 		return true;
 	}
 }
@@ -503,8 +502,7 @@ bool run_vm(const char *rom_path)
 				gvm_error("Could not open file to save state\n");
 			} else {
 				for (int i = 0; i < vm.state_count; ++i) {
-					GvmConstant value = CONSTANT(vm.state[i].current, vm.state[i].type);
-					if (!serialise(vm.state[i].name, value)) {
+					if (!serialise(vm.state[i].name, vm.state[i].value)) {
 						gvm_error("Error serialising state\n");
 						break;
 					}
@@ -556,8 +554,8 @@ bool run_vm(const char *rom_path)
 						int index;
 						const char *name = new_vm.state[i].name;
 						if (locate_state(name, strlen(name), &index)) {
-							if (vm.state[index].type == new_vm.state[i].type) {
-								new_vm.state[i].current = vm.state[index].current;
+							if (vm.state[index].value.type == new_vm.state[i].value.type) {
+								new_vm.state[i].value = vm.state[index].value;
 							}
 						}
 					}

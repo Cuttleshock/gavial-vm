@@ -24,13 +24,18 @@ bool serialise(const char *name, GvmConstant value)
 	}
 
 	int success = -1;
+	char buf_x[32];
+	char buf_y[32];
 
 	switch (value.type) {
 		case VAL_SCALAR:
-			success = fprintf(open_file, "#LOAD_SCALAR(`%s, %d)\n", name, value.as.scalar);
+			sprint_scalar(buf_x, value);
+			success = fprintf(open_file, "#LOAD_SCALAR(`%s, \"%s\")\n", name, buf_x);
 			break;
 		case VAL_VEC2:
-			success = fprintf(open_file, "#LOAD_VEC2(`%s, %d, %d)\n", name, V2X(value), V2Y(value));
+			sprint_vec2_x(buf_x, value);
+			sprint_vec2_y(buf_y, value);
+			success = fprintf(open_file, "#LOAD_VEC2(`%s, \"%s\", \"%s\")\n", name, buf_x, buf_y);
 			break;
 	}
 
