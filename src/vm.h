@@ -13,6 +13,7 @@ typedef enum {
 	// Arithmetic
 	OP_ADD,
 	OP_SUBTRACT,
+	OP_MULTIPLY,
 	OP_MODULO,
 	// Vectors
 	OP_GET_X,

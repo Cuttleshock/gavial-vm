@@ -99,6 +99,11 @@ static void hook_SUBTRACT(CcmList *)
 	instruction(OP_SUBTRACT);
 }
 
+static void hook_MULTIPLY(CcmList *)
+{
+	instruction(OP_MULTIPLY);
+}
+
 static void hook_LESS_THAN(CcmList *)
 {
 	instruction(OP_LESS_THAN);
@@ -277,6 +282,7 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(SET, 1);
 	TRY(ADD, 0);
 	TRY(SUBTRACT, 0);
+	TRY(MULTIPLY, 0);
 	TRY(MODULO, 0);
 	TRY(LESS_THAN, 0);
 	TRY(GREATER_THAN, 0);

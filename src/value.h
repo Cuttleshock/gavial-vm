@@ -18,6 +18,7 @@ typedef struct {
 
 GvmConstant add_vals(GvmConstant a, GvmConstant b);
 GvmConstant subtract_vals(GvmConstant a, GvmConstant b);
+GvmConstant multiply_vals(GvmConstant a, GvmConstant b);
 GvmConstant val_less_than(GvmConstant a, GvmConstant b);
 GvmConstant val_greater_than(GvmConstant a, GvmConstant b);
 GvmConstant val_modulus(GvmConstant a, GvmConstant b);

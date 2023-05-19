@@ -104,6 +104,13 @@ static bool update()
 				modify(result);
 				break;
 			}
+			case OP_MULTIPLY: {
+				GvmConstant b = pop();
+				GvmConstant a = peek();
+				GvmConstant result = multiply_vals(a, b);
+				modify(result);
+				break;
+			}
 			case OP_MODULO: {
 				GvmConstant b = pop();
 				GvmConstant a = peek();

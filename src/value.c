@@ -34,6 +34,12 @@ static GvmConstant vec2(FixedPoint x, FixedPoint y)
 	return c;
 }
 
+static FixedPoint double_to_fixed(double d)
+{
+	// TODO: Round, don't floor
+	return d * FP_DEN;
+}
+
 static FixedPoint fixed_add(FixedPoint a, FixedPoint b)
 {
 	FixedPoint res = a + b;
@@ -49,6 +55,15 @@ static FixedPoint fixed_add(FixedPoint a, FixedPoint b)
 static FixedPoint fixed_subtract(FixedPoint a, FixedPoint b)
 {
 	return fixed_add(a, -b);
+}
+
+// TODO: Avoid visiting float land
+static FixedPoint fixed_multiply(FixedPoint a, FixedPoint b)
+{
+	double a_d = a * FP_EPS;
+	double b_d = b * FP_EPS;
+	double res = a_d * b_d;
+	return double_to_fixed(res);
 }
 
 // Adds two values, respecting the type of the first operand
@@ -73,6 +88,19 @@ GvmConstant subtract_vals(GvmConstant a, GvmConstant b)
 			return scalar(fixed_subtract(SCX(a), SCX(b)));
 		case VAL_VEC2:
 			return vec2(fixed_subtract(V2X(a), V2X(b)), fixed_subtract(V2Y(a), V2Y(b)));
+	}
+
+	return scalar(0); // Unreachable
+}
+
+// Multiplies two values - for vec2, element-wise multiplication
+GvmConstant multiply_vals(GvmConstant a, GvmConstant b)
+{
+	switch (a.type) {
+		case VAL_SCALAR:
+			return scalar(fixed_multiply(SCX(a), SCX(b)));
+		case VAL_VEC2:
+			return vec2(fixed_multiply(V2X(a), V2X(b)), fixed_multiply(V2Y(a), V2Y(b)));
 	}
 
 	return scalar(0); // Unreachable
@@ -208,12 +236,6 @@ static FixedPoint scan_fixed(const char *str)
 	} else {
 		return whole * FP_DEN;
 	}
-}
-
-static FixedPoint double_to_fixed(double d)
-{
-	// TODO: Round, don't floor
-	return d * FP_DEN;
 }
 
 // Deserialises str to scalar
