@@ -58,7 +58,7 @@ static void modify(GvmConstant val)
 
 static void push(GvmConstant val)
 {
-	if (vm.stack_count >= 256) {
+	if (vm.stack_count >= sizeof(vm.stack) / sizeof(vm.stack[0])) {
 		runtime_error("Stack overflow");
 		return;
 	}
@@ -166,6 +166,12 @@ static bool update()
 				GvmConstant b = pop();
 				GvmConstant a = peek();
 				modify(val_and(a, b));
+				break;
+			}
+			case OP_OR: {
+				GvmConstant b = pop();
+				GvmConstant a = peek();
+				modify(val_or(a, b));
 				break;
 			}
 			case OP_BUTTON_PRESSED:
@@ -401,6 +407,19 @@ bool instruction(uint8_t byte)
 
 	vm.instructions[vm.count++] = byte;
 	return true;
+}
+
+// Returns type of named state if it exists (as checked by state_instruction or
+// some other method), else undefined
+ValueType state_type(const char *name, int length)
+{
+	int index;
+	bool found = locate_state(name, length, &index);
+	if (!found) {
+		return VAL_SCALAR;
+	} else {
+		return vm.state[index].value.type;
+	}
 }
 
 bool state_instruction(uint8_t byte, const char *name, int length)

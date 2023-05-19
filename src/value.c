@@ -159,6 +159,15 @@ GvmConstant val_and(GvmConstant a, GvmConstant b)
 	}
 }
 
+GvmConstant val_or(GvmConstant a, GvmConstant b)
+{
+	if (SCX(a) != 0 || SCX(b) != 0) {
+		return scalar(1);
+	} else {
+		return scalar(0);
+	}
+}
+
 static void sprint_fixed(char *buffer, FixedPoint n)
 {
 	int64_t whole = n / FP_DEN;

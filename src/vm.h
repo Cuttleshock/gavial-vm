@@ -27,6 +27,7 @@ typedef enum {
 	OP_GREATER_THAN,
 	OP_NOT,
 	OP_AND, // does not short-circuit
+	OP_OR,
 	// Input
 	OP_BUTTON_PRESSED,
 	// Drawing
@@ -55,6 +56,7 @@ void set_sprite_flags(uint8_t flags, int index);
 bool set_introspection_map(const uint8_t (*map)[4], int width, int height);
 bool set_state(GvmConstant value, const char *name, int length);
 bool instruction(uint8_t byte);
+ValueType state_type(const char *name, int length);
 bool state_instruction(uint8_t byte, const char *name, int length);
 bool jump(uint8_t byte, uint32_t *out_index);
 bool resolve_jump(uint32_t index);

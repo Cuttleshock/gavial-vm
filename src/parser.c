@@ -13,6 +13,75 @@
 static uint32_t jump_stack[256];
 static int jump_count = 0;
 
+// Static stack analysis
+static ValueType stack[256]; // TODO: array length magical
+static int stack_count = 0;
+
+static const char *type_string(ValueType type)
+{
+#define CASE(_type) case VAL_ ## _type: return #_type
+
+	switch (type) {
+		CASE(SCALAR);
+		CASE(VEC2);
+		default:
+			return "UNKNOWN";
+	}
+
+#undef CASE
+}
+
+static void push(ValueType type)
+{
+	if (stack_count >= sizeof(stack) / sizeof(stack[0])) {
+		ccm_runtime_error("Static stack overflow");
+		return;
+	}
+
+	stack[stack_count++] = type;
+}
+
+static ValueType pop()
+{
+	if (stack_count <= 0) {
+		ccm_runtime_error("Static stack underflow");
+		return VAL_SCALAR;
+	}
+
+	return stack[--stack_count];
+}
+
+static void expect(ValueType type)
+{
+	if (stack_count <= 0) {
+		ccm_runtime_error("Static stack underflow");
+		return;
+	}
+
+	ValueType top = stack[--stack_count];
+	if (top != type) {
+		// TODO: Don't want a spurious error if pop() failed
+		char error[64];
+		snprintf(error, sizeof(error), "Type error: expect %s, got %s", type_string(type), type_string(top));
+		ccm_runtime_error(error);
+	}
+}
+
+// Expects two scalars or two vec2s atop the stack
+static ValueType expect_number_pair()
+{
+	ValueType top = pop();
+	switch (top) {
+		case VAL_SCALAR:
+		case VAL_VEC2:
+			expect(top);
+			return top;
+		default:
+			ccm_runtime_error("Expect two scalars or two vectors");
+			return VAL_SCALAR;
+	}
+}
+
 // TODO: Better to shape CcmRealloc like gvm_realloc()
 static void *gvm_ccm_realloc_wrapper(void *ptr, size_t size)
 {
@@ -21,7 +90,11 @@ static void *gvm_ccm_realloc_wrapper(void *ptr, size_t size)
 
 static void hook_number(double d)
 {
-	constant(double_to_scalar(d));
+	if (constant(double_to_scalar(d))) {
+		push(VAL_SCALAR);
+	} else {
+		ccm_runtime_error("Too many constants");
+	}
 }
 
 static void hook_string(const char *str, int length)
@@ -31,7 +104,11 @@ static void hook_string(const char *str, int length)
 
 static void hook_symbol(const char *str, int length)
 {
-	state_instruction(OP_GET, str, length);
+	if (state_instruction(OP_GET, str, length)) {
+		push(state_type(str, length));
+	} else {
+		ccm_runtime_error("Invalid variable name"); // could also be an allocation failure
+	}
 }
 
 static void hook_DEFINE_SCALAR(CcmList lists[])
@@ -81,47 +158,79 @@ static void hook_SET(CcmList lists[])
 {
 	const char *name = lists[0].values[0].as.str.chars;
 	int length = lists[0].values[0].as.str.length;
-	state_instruction(OP_SET, name, length);
+	if (state_instruction(OP_SET, name, length)) {
+		expect(state_type(name, length));
+	} else {
+		ccm_runtime_error("Invalid variable name");
+	}
 }
 
 static void hook_MODULO(CcmList *)
 {
-	instruction(OP_MODULO);
+	expect(VAL_SCALAR);
+	expect(VAL_SCALAR);
+	push(VAL_SCALAR);
+	instruction(OP_MODULO); // TODO: still lacking some error checking
 }
 
 static void hook_ADD(CcmList *)
 {
+	ValueType type = expect_number_pair();
+	push(type);
 	instruction(OP_ADD);
 }
 
 static void hook_SUBTRACT(CcmList *)
 {
+	ValueType type = expect_number_pair();
+	push(type);
 	instruction(OP_SUBTRACT);
 }
 
 static void hook_MULTIPLY(CcmList *)
 {
+	ValueType type = expect_number_pair();
+	push(type);
 	instruction(OP_MULTIPLY);
 }
 
 static void hook_LESS_THAN(CcmList *)
 {
+	expect(VAL_SCALAR);
+	expect(VAL_SCALAR);
+	push(VAL_SCALAR);
 	instruction(OP_LESS_THAN);
 }
 
 static void hook_GREATER_THAN(CcmList *)
 {
+	expect(VAL_SCALAR);
+	expect(VAL_SCALAR);
+	push(VAL_SCALAR);
 	instruction(OP_GREATER_THAN);
 }
 
 static void hook_NOT(CcmList *)
 {
+	expect(VAL_SCALAR);
+	push(VAL_SCALAR);
 	instruction(OP_NOT);
 }
 
 static void hook_AND(CcmList *)
 {
+	expect(VAL_SCALAR);
+	expect(VAL_SCALAR);
+	push(VAL_SCALAR);
 	instruction(OP_AND);
+}
+
+static void hook_OR(CcmList *)
+{
+	expect(VAL_SCALAR);
+	expect(VAL_SCALAR);
+	push(VAL_SCALAR);
+	instruction(OP_OR);
 }
 
 // TODO: Argument checking
@@ -129,26 +238,38 @@ static void hook_VEC2(CcmList lists[])
 {
 	double a = lists[0].values[0].as.number;
 	double b = lists[1].values[0].as.number;
-	constant(double_to_vec2(a, b)); // TODO: ... and error checking
+	if (constant(double_to_vec2(a, b))) {
+		push(VAL_VEC2);
+	} else {
+		ccm_runtime_error("Too many constants");
+	}
 }
 
 static void hook_MAKE_VEC2(CcmList lists[])
 {
+	expect(VAL_SCALAR);
+	expect(VAL_SCALAR);
+	push(VAL_VEC2);
 	instruction(OP_MAKE_VEC2);
 }
 
 static void hook_GET_X(CcmList lists[])
 {
+	expect(VAL_VEC2);
+	push(VAL_SCALAR);
 	instruction(OP_GET_X);
 }
 
 static void hook_GET_Y(CcmList lists[])
 {
+	expect(VAL_VEC2);
+	push(VAL_SCALAR);
 	instruction(OP_GET_Y);
 }
 
 static void hook_JUMP_IF_FALSE(CcmList[])
 {
+	expect(VAL_SCALAR);
 	if (jump_count >= sizeof(jump_stack) / sizeof(jump_stack[0])) {
 		ccm_runtime_error("Too deeply nested control flow");
 	} else {
@@ -180,29 +301,35 @@ static void hook_POP_JUMP(CcmList[])
 static void hook_PRESSED(CcmList lists[])
 {
 	int button = lists[0].values[0].as.number;
+	push(VAL_SCALAR);
 	instruction(OP_BUTTON_PRESSED);
 	instruction(button);
 }
 
 static void hook_CAM(CcmList[])
 {
+	expect(VAL_VEC2);
 	instruction(OP_CAM);
 }
 
 // These two could be static but it's a little more error-prone to make them so
 static void hook_MAP_WIDTH(CcmList *)
 {
+	push(VAL_SCALAR);
 	instruction(OP_MAP_WIDTH);
 }
 
 static void hook_MAP_HEIGHT(CcmList *)
 {
+	push(VAL_SCALAR);
 	instruction(OP_MAP_HEIGHT);
 }
 
 static void hook_MAP_FLAG(CcmList lists[])
 {
 	uint8_t bit = lists[0].values[0].as.number;
+	expect(VAL_VEC2);
+	push(VAL_SCALAR);
 	instruction(OP_MAP_FLAG);
 	instruction(bit);
 }
@@ -212,6 +339,8 @@ static void hook_FILL_RECT(CcmList lists[])
 {
 	int pal = lists[0].values[0].as.number;
 	int col = lists[1].values[0].as.number;
+	expect(VAL_VEC2);
+	expect(VAL_VEC2);
 	instruction(OP_FILL_RECT);
 	instruction(pal);
 	instruction(col);
@@ -224,6 +353,7 @@ static void hook_SPRITE(CcmList lists[])
 	int pal = lists[2].values[0].as.number;
 	int h_flip = lists[3].values[0].as.number;
 	int v_flip = lists[4].values[0].as.number;
+	expect(VAL_VEC2);
 	instruction(OP_SPRITE);
 	instruction(sprite_x);
 	instruction(sprite_y);
@@ -234,16 +364,21 @@ static void hook_SPRITE(CcmList lists[])
 
 static void hook_DUP(CcmList *)
 {
+	ValueType top = pop();
+	push(top);
+	push(top);
 	instruction(OP_DUP);
 }
 
 static void hook_POP(CcmList *)
 {
+	pop();
 	instruction(OP_POP);
 }
 
 static void hook_RETURN(CcmList *)
 {
+	// TODO: Stack
 	instruction(OP_RETURN);
 }
 
@@ -288,6 +423,7 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(GREATER_THAN, 0);
 	TRY(NOT, 0);
 	TRY(AND, 0);
+	TRY(OR, 0);
 	TRY(VEC2, 2);
 	TRY(PRESSED, 1);
 	TRY(MAKE_VEC2, 0);
@@ -579,6 +715,7 @@ static bool parse_map(const char *src, int src_length)
 bool load_rom(const char *path)
 {
 	jump_count = 0;
+	stack_count = 0;
 
 	int src_length;
 	char *src = read_file(path, &src_length);

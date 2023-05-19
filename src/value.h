@@ -5,15 +5,17 @@
 
 typedef int64_t FixedPoint;
 
+typedef enum {
+	VAL_SCALAR,
+	VAL_VEC2,
+} ValueType;
+
 typedef struct {
 	union {
 		FixedPoint scalar;
 		FixedPoint vec2[2];
 	} as;
-	enum {
-		VAL_SCALAR,
-		VAL_VEC2,
-	} type;
+	ValueType type;
 } GvmConstant;
 
 GvmConstant add_vals(GvmConstant a, GvmConstant b);
@@ -27,6 +29,7 @@ GvmConstant val_vec2_get_y(GvmConstant v);
 GvmConstant val_vec2_make(GvmConstant x, GvmConstant y);
 GvmConstant val_falsify(GvmConstant b);
 GvmConstant val_and(GvmConstant a, GvmConstant b);
+GvmConstant val_or(GvmConstant a, GvmConstant b);
 
 void sprint_scalar(char *buffer, GvmConstant value);
 void sprint_vec2_x(char *buffer, GvmConstant value);
