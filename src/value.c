@@ -13,6 +13,7 @@
 #define FP_DEN 1000000l               // denominator of epsilon
 #define FP_EPS (1.0 / (double)FP_DEN) // resolution and epsilon
 #define FP_MAX (99999999l * FP_DEN)   // greatest magnitude
+#define FX2FL(fx) ((fx) * FP_EPS)     // fixed-point to double
 
 #define SCX(constant) ((constant).as.scalar)
 #define V2X(constant) ((constant).as.vec2[0])
@@ -61,8 +62,8 @@ static FixedPoint fixed_subtract(FixedPoint a, FixedPoint b)
 // TODO: Avoid visiting float land
 static FixedPoint fixed_multiply(FixedPoint a, FixedPoint b)
 {
-	double a_d = a * FP_EPS;
-	double b_d = b * FP_EPS;
+	double a_d = FX2FL(a);
+	double b_d = FX2FL(b);
 	double res = a_d * b_d;
 	return double_to_fixed(res);
 }
@@ -80,8 +81,8 @@ static FixedPoint fixed_divide(FixedPoint a, FixedPoint b)
 		}
 	}
 
-	double a_d = a * FP_EPS;
-	double b_d = b * FP_EPS;
+	double a_d = FX2FL(a);
+	double b_d = FX2FL(b);
 	double res = a_d / b_d;
 	return double_to_fixed(res);
 }
@@ -90,7 +91,7 @@ static FixedPoint fixed_divide(FixedPoint a, FixedPoint b)
 // TODO: May be desirable to avoid sqrt() and math.h
 static FixedPoint fixed_sqrt(FixedPoint a)
 {
-	double a_d = a * FP_EPS;
+	double a_d = FX2FL(a);
 	if (a_d < 0) {
 		return double_to_fixed(-sqrt(-a_d));
 	} else {
