@@ -19,6 +19,7 @@ typedef enum {
 	OP_GET_X,
 	OP_GET_Y,
 	OP_MAKE_VEC2,
+	OP_NORMALIZE,
 	// Control flow
 	OP_JUMP_IF_FALSE,
 	OP_JUMP,

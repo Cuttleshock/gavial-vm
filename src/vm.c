@@ -128,6 +128,9 @@ static bool update()
 				GvmConstant x = peek();
 				modify(val_vec2_make(x, y));
 				break;
+			case OP_NORMALIZE:
+				modify(val_vec2_normalize(peek()));
+				break;
 			case OP_JUMP_IF_FALSE: {
 				GvmConstant condition = pop();
 				uint32_t *target = (uint32_t *)&vm.instructions[i];

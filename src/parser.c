@@ -267,6 +267,13 @@ static void hook_GET_Y(CcmList lists[])
 	instruction(OP_GET_Y);
 }
 
+static void hook_NORMALIZE(CcmList *)
+{
+	expect(VAL_VEC2);
+	push(VAL_VEC2);
+	instruction(OP_NORMALIZE);
+}
+
 static void hook_JUMP_IF_FALSE(CcmList[])
 {
 	expect(VAL_SCALAR);
@@ -429,6 +436,7 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(MAKE_VEC2, 0);
 	TRY(GET_X, 0);
 	TRY(GET_Y, 0);
+	TRY(NORMALIZE, 0);
 	TRY(JUMP_IF_FALSE, 0);
 	TRY(JUMP_AND_POP, 0);
 	TRY(POP_JUMP, 0);

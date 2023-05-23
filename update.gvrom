@@ -48,12 +48,11 @@ INIT UPDATE
 			BUTTON_LEFT #SET(`player_facing)
 			ADD(`player_velocity, V2(-1, 0))))
 
-	IF(==(2, ABS2(`player_velocity)),
-		MULT(`player_velocity, INVSQRT2*2))
-
+	NORMALIZE(`player_velocity)
+	MULT(`player_velocity, PLAYER_SPEED)
 	ADD(`player_position, `player_velocity)
-	IF(OR(OR(OR(+(`player_position, V2(2, 0)) #MAP_FLAG(0), +(`player_position, V2(9, 0)) #MAP_FLAG(0)), `player_position #MAP_FLAG(0)), +(`player_position, V2(0, 12)) #MAP_FLAG(0)),
-		SUB(`player_position, `player_velocity))
+
+	;_(+(`player_position, PLAYER_COLLISION_OFFSET) PLAYER_COLLISION_SIZE `player_velocity #MOVE_COLLIDE(0), PLAYER_COLLISION_OFFSET) #SET(`player_position)
 
 	IF(#PRESSED(BUTTON_B),
 		ATTACK)
@@ -92,8 +91,9 @@ INIT UPDATE
 :IFATTACK(?do) IF(>(`attack_timer, 0), ?do)
 
 :ATTACK_DURATION() 30
-:INVSQRT2() 0.707107
-:INVSQRT2*2() V2(INVSQRT2, INVSQRT2)
+:PLAYER_SPEED() V2(1, 1)
+:PLAYER_COLLISION_OFFSET() V2(2, 0)
+:PLAYER_COLLISION_SIZE() V2(8, 12)
 
 :IFNOT(?cond, ?if) IFELSE(?cond, , ?if)
 :IF(?cond, ?if) IFELSE(?cond, ?if, )
@@ -116,6 +116,7 @@ INIT UPDATE
 :ADD(?state, ?val) +(?state, ?val) #SET(?state)
 :SUB(?state, ?val) _(?state, ?val) #SET(?state)
 :MULT(?state, ?val) *(?state, ?val) #SET(?state)
+:NORMALIZE(?state) ?state #NORMALIZE #SET(?state)
 :ABS(?x) IFELSE(>(0, ?x), _(0, ?x), ?x)
 :ABS2(?vec) +(ABS(?vec #GET_X), ABS(?vec #GET_Y))
 

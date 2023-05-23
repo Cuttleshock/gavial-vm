@@ -27,6 +27,7 @@ GvmConstant val_modulus(GvmConstant a, GvmConstant b);
 GvmConstant val_vec2_get_x(GvmConstant v);
 GvmConstant val_vec2_get_y(GvmConstant v);
 GvmConstant val_vec2_make(GvmConstant x, GvmConstant y);
+GvmConstant val_vec2_normalize(GvmConstant v);
 GvmConstant val_falsify(GvmConstant b);
 GvmConstant val_and(GvmConstant a, GvmConstant b);
 GvmConstant val_or(GvmConstant a, GvmConstant b);

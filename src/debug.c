@@ -38,6 +38,7 @@ static int disassemble_instruction(int i)
 		CASE(OP_GET_X);
 		CASE(OP_GET_Y);
 		CASE(OP_MAKE_VEC2);
+		CASE(OP_NORMALIZE);
 		CASE_32BIT(OP_JUMP_IF_FALSE);
 		CASE_32BIT(OP_JUMP);
 		CASE(OP_LESS_THAN);

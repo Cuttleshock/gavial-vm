@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -64,6 +65,37 @@ static FixedPoint fixed_multiply(FixedPoint a, FixedPoint b)
 	double b_d = b * FP_EPS;
 	double res = a_d * b_d;
 	return double_to_fixed(res);
+}
+
+// Behaviour undefined when b == 0 - try to catch that case before calling this
+static FixedPoint fixed_divide(FixedPoint a, FixedPoint b)
+{
+	if (b == 0) {
+		if (a > 0) {
+			return FP_MAX;
+		} else if (a < 0) {
+			return -FP_MAX;
+		} else {
+			return 0;
+		}
+	}
+
+	double a_d = a * FP_EPS;
+	double b_d = b * FP_EPS;
+	double res = a_d / b_d;
+	return double_to_fixed(res);
+}
+
+// Behaviour undefined when a < 0
+// TODO: May be desirable to avoid sqrt() and math.h
+static FixedPoint fixed_sqrt(FixedPoint a)
+{
+	double a_d = a * FP_EPS;
+	if (a_d < 0) {
+		return double_to_fixed(-sqrt(-a_d));
+	} else {
+		return double_to_fixed(sqrt(a_d));
+	}
 }
 
 // Adds two values, respecting the type of the first operand
@@ -142,6 +174,18 @@ GvmConstant val_vec2_get_y(GvmConstant v)
 GvmConstant val_vec2_make(GvmConstant x, GvmConstant y)
 {
 	return vec2(SCX(x), SCX(y));
+}
+
+GvmConstant val_vec2_normalize(GvmConstant v)
+{
+	FixedPoint magnitude = fixed_sqrt(fixed_add(fixed_multiply(V2X(v), V2X(v)), fixed_multiply(V2Y(v), V2Y(v))));
+	if (magnitude == 0) {
+		return v;
+	}
+
+	FixedPoint x = fixed_divide(V2X(v), magnitude);
+	FixedPoint y = fixed_divide(V2Y(v), magnitude);
+	return vec2(x, y);
 }
 
 // Like ! operator - converts scalar b to scalar 0 or 1
