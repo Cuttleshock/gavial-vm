@@ -114,7 +114,7 @@ FILE *open_unique(const char *path, const char *suffix)
 	}
 	strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", &calendar);
 
-	int chars = snprintf(full_path, sizeof(full_path), "%s_%s%s", path, timestamp, suffix);
+	int chars = snprintf(full_path, sizeof(full_path), "%s.%s%s", path, timestamp, suffix);
 	if (chars < 0 || chars >= sizeof(full_path)) {
 		return NULL;
 	}
