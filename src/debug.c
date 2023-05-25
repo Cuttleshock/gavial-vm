@@ -45,6 +45,7 @@ static int disassemble_instruction(int i)
 		CASE(OP_GREATER_THAN);
 		CASE(OP_NOT);
 		CASE(OP_AND);
+		CASE(OP_OR);
 		CASE_BYTE(OP_BUTTON_PRESSED);
 		CASE_2BYTE(OP_LOAD_PAL);
 		CASE(OP_CAM);
@@ -59,7 +60,7 @@ static int disassemble_instruction(int i)
 		CASE(OP_PRINT);
 		CASE(OP_RETURN);
 		default:
-			gvm_log("UNKNOWN INSTRUCTION %2x\n", instruction);
+			gvm_log("UNKNOWN INSTRUCTION 0x%2x\n", instruction);
 			return ++i;
 	}
 
