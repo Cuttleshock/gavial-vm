@@ -50,9 +50,8 @@ INIT UPDATE
 
 	NORMALIZE(`player_velocity)
 	MULT(`player_velocity, PLAYER_SPEED)
-	ADD(`player_position, `player_velocity)
 
-	;_(+(`player_position, PLAYER_COLLISION_OFFSET) PLAYER_COLLISION_SIZE `player_velocity #MOVE_COLLIDE(0), PLAYER_COLLISION_OFFSET) #SET(`player_position)
+	_(+(`player_position, PLAYER_COLLISION_OFFSET) PLAYER_COLLISION_SIZE `player_velocity #MOVE_COLLIDE(0), PLAYER_COLLISION_OFFSET) #SET(`player_position)
 
 	IF(#PRESSED(BUTTON_B),
 		ATTACK)

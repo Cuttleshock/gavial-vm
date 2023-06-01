@@ -26,6 +26,249 @@ static void runtime_error(const char *message)
 	}
 }
 
+// Returns: bitfield of the map at given position (as pixel coordinates)
+static bool get_map_flags(GvmConstant position)
+{
+	int x = vec2_get_x(position);
+	int y = vec2_get_y(position);
+	if (x < 0 || vm.map_width * SPRITE_SZ <= x || y < 0 || vm.map_height * SPRITE_SZ <= y) {
+		return 0;
+	} else {
+		int map_x = x / SPRITE_SZ;
+		int map_y = y / SPRITE_SZ;
+		uint16_t sprite = vm.map[map_x + vm.map_width * map_y];
+		return vm.sprite_flags[sprite];
+	}
+}
+
+// Helper: checks if the given quad is sliding against a map tile with flags
+// matching the given bit. Checks for x-sliding if !transpose, else y-sliding.
+static bool is_sliding_1d(GvmConstant position, GvmConstant size, GvmConstant velocity, uint8_t bit, bool transpose)
+{
+	GvmConstant (*get_x)(GvmConstant) = transpose ? val_vec2_get_y : val_vec2_get_x;
+	GvmConstant (*get_y)(GvmConstant) = transpose ? val_vec2_get_x : val_vec2_get_y;
+
+	// Horizontal sliding is determined by vertical movement and vice-versa
+	GvmConstant v = get_y(velocity);
+	GvmConstant x0 = get_x(position);
+	GvmConstant y0 = get_y(position);
+	GvmConstant x1 = add_vals(x0, get_x(size));
+	GvmConstant y1 = add_vals(y0, get_y(size));
+
+	GvmConstant zero = int_to_scalar(0);
+	GvmConstant grid = int_to_scalar(SPRITE_SZ);
+
+	if (val_less_than(v, zero)) {
+		GvmConstant boundary = floor_val(y0, grid);
+		if (val_equal(y0, boundary)) {
+			GvmConstant map_y = subtract_vals(y0, grid);
+			for (GvmConstant map_x = floor_val(x0, grid); val_less_than(map_x, x1); map_x = add_vals(map_x, grid)) {
+				GvmConstant map_position = val_vec2_make(transpose ? map_y : map_x, transpose ? map_x : map_y);
+				uint8_t flags = get_map_flags(map_position);
+				if ((bit & flags) != 0) {
+					return true;
+				}
+			}
+			return false;
+		} else {
+			return false;
+		}
+	} else if (val_greater_than(v, zero)) {
+		GvmConstant boundary = ceil_val(y1, grid);
+		if (val_equal(y1, boundary)) {
+			GvmConstant map_y = y1;
+			for (GvmConstant map_x = floor_val(x0, grid); val_less_than(map_x, x1); map_x = add_vals(map_x, grid)) {
+				GvmConstant map_position = val_vec2_make(transpose ? map_y : map_x, transpose ? map_x : map_y);
+				uint8_t flags = get_map_flags(map_position);
+				if ((bit & flags) != 0) {
+					return true;
+				}
+			}
+			return false;
+		} else {
+			return false;
+		}
+	} else {
+		// Even if we're on a grid boundary, no vertical movement means no slide
+		return false;
+	}
+}
+
+static bool is_sliding_x(GvmConstant position, GvmConstant size, GvmConstant velocity, uint8_t bit)
+{
+	return is_sliding_1d(position, size, velocity, bit, false);
+}
+
+static bool is_sliding_y(GvmConstant position, GvmConstant size, GvmConstant velocity, uint8_t bit)
+{
+	return is_sliding_1d(position, size, velocity, bit, true);
+}
+
+// Moves position to the next grid boundary
+// Returns: time of impact (or very big value if it never hits one), and places
+// position of impact in out_position
+static GvmConstant move_to_boundary(GvmConstant position, GvmConstant size, GvmConstant velocity, GvmConstant *out_position)
+{
+	GvmConstant zero = int_to_scalar(0);
+	GvmConstant grid = int_to_scalar(SPRITE_SZ);
+
+	GvmConstant x0 = val_vec2_get_x(position);
+	GvmConstant y0 = val_vec2_get_y(position);
+	GvmConstant w = val_vec2_get_x(size);
+	GvmConstant h = val_vec2_get_y(size);
+	GvmConstant x1 = add_vals(x0, w);
+	GvmConstant y1 = add_vals(y0, h);
+	GvmConstant vx = val_vec2_get_x(velocity);
+	GvmConstant vy = val_vec2_get_y(velocity);
+
+	// Time to boundary along x-axis
+	GvmConstant tx = int_to_scalar(INT32_MAX);
+	GvmConstant pos_x = position;
+	if (val_less_than(vx, zero)) {
+		GvmConstant lead_x = floor_val_ex(x0, grid);
+		tx = divide_vals(subtract_vals(lead_x, x0), vx);
+		GvmConstant pos_x_y = add_vals(y0, multiply_vals(vy, tx));
+		pos_x = val_vec2_make(lead_x, pos_x_y);
+	} else if (val_greater_than(vx, zero)) {
+		GvmConstant lead_x = ceil_val_ex(x1, grid);
+		tx = divide_vals(subtract_vals(lead_x, x1), vx);
+		GvmConstant pos_x_y = add_vals(y0, multiply_vals(vy, tx));
+		pos_x = val_vec2_make(subtract_vals(lead_x, w), pos_x_y);
+	}
+
+	// Time to boundary along y-axis
+	GvmConstant ty = int_to_scalar(INT32_MAX);
+	GvmConstant pos_y = position;
+	if (val_less_than(vy, zero)) {
+		GvmConstant lead_y = floor_val_ex(y0, grid);
+		ty = divide_vals(subtract_vals(lead_y, y0), vy);
+		GvmConstant pos_y_x = add_vals(x0, multiply_vals(vx, ty));
+		pos_y = val_vec2_make(pos_y_x, lead_y);
+	} else if (val_greater_than(vy, zero)) {
+		GvmConstant lead_y = ceil_val_ex(y1, grid);
+		ty = divide_vals(subtract_vals(lead_y, y1), vy);
+		GvmConstant pos_y_x = add_vals(x0, multiply_vals(vx, ty));
+		pos_y = val_vec2_make(pos_y_x, subtract_vals(lead_y, h));
+	}
+
+	GvmConstant toi = val_less_than(tx, ty) ? tx : ty;
+	// If we calculated position + toi * velocity, we might not end up exactly
+	// on a grid boundary since division and multiplication are not necessarily
+	// inverse operations. That's why we calculate pos_x and pos_y earlier.
+	*out_position = val_less_than(tx, ty) ? pos_x : pos_y;
+	return toi;
+}
+
+// Helper: moves x0 until x0 or (x0 + w) hits a grid boundary
+// All arguments are scalars
+// Returns: time of impact, and places position of impact in out_position
+static GvmConstant slide_to_boundary_1d(GvmConstant x0, GvmConstant w, GvmConstant v, GvmConstant *out_position)
+{
+	GvmConstant x1 = add_vals(x0, w);
+	GvmConstant zero = int_to_scalar(0);
+	GvmConstant grid = int_to_scalar(SPRITE_SZ);
+
+	if (val_less_than(v, zero)) {
+		GvmConstant t0 = divide_vals(subtract_vals(floor_val_ex(x0, grid), x0), v);
+		GvmConstant t1 = divide_vals(subtract_vals(floor_val_ex(x1, grid), x1), v);
+		if (val_less_than(t0, t1)) {
+			*out_position = floor_val_ex(x0, grid);
+			return t0;
+		} else {
+			*out_position = subtract_vals(floor_val_ex(x1, grid), w);
+			return t1;
+		}
+	} else if (val_greater_than(v, zero)) {
+		GvmConstant t0 = divide_vals(subtract_vals(ceil_val_ex(x0, grid), x0), v);
+		GvmConstant t1 = divide_vals(subtract_vals(ceil_val_ex(x1, grid), x1), v);
+		if (val_less_than(t0, t1)) {
+			*out_position = ceil_val_ex(x0, grid);
+			return t0;
+		} else {
+			*out_position = subtract_vals(ceil_val_ex(x1, grid), w);
+			return t1;
+		}
+	} else {
+		*out_position = x0;
+		return int_to_scalar(INT32_MAX);
+	}
+}
+
+// All arguments are vec2s
+// Returns: time of impact, and places position of impact in out_position
+static GvmConstant slide_to_boundary_x(GvmConstant position, GvmConstant size, GvmConstant velocity, GvmConstant *out_position)
+{
+	GvmConstant out_1d;
+	GvmConstant toi = slide_to_boundary_1d(val_vec2_get_x(position), val_vec2_get_x(size), val_vec2_get_x(velocity), &out_1d);
+	*out_position = val_vec2_make(out_1d, val_vec2_get_y(position));
+	return toi;
+}
+
+static GvmConstant slide_to_boundary_y(GvmConstant position, GvmConstant size, GvmConstant velocity, GvmConstant *out_position)
+{
+	GvmConstant out_1d;
+	GvmConstant toi = slide_to_boundary_1d(val_vec2_get_y(position), val_vec2_get_y(size), val_vec2_get_y(velocity), &out_1d);
+	*out_position = val_vec2_make(val_vec2_get_x(position), out_1d);
+	return toi;
+}
+
+// Returns: position + t * [velocity.x, 0]
+static GvmConstant slide_no_collide_x(GvmConstant position, GvmConstant velocity, GvmConstant t)
+{
+	GvmConstant displacement = multiply_vals(val_vec2_get_x(velocity), t);
+	return val_vec2_make(add_vals(val_vec2_get_x(position), displacement), val_vec2_get_y(position));
+}
+
+static GvmConstant slide_no_collide_y(GvmConstant position, GvmConstant velocity, GvmConstant t)
+{
+	GvmConstant displacement = multiply_vals(val_vec2_get_y(velocity), t);
+	return val_vec2_make(val_vec2_get_x(position), add_vals(val_vec2_get_y(position), displacement));
+}
+
+// Returns: position + t * velocity
+static GvmConstant move_no_collide(GvmConstant position, GvmConstant velocity, GvmConstant t)
+{
+	GvmConstant displacement = multiply_vals(velocity, val_vec2_make(t, t));
+	return add_vals(position, displacement);
+}
+
+static GvmConstant move_collide(GvmConstant position, GvmConstant size, GvmConstant velocity, uint8_t bit)
+{
+	GvmConstant t = int_to_scalar(1);
+	GvmConstant zero = int_to_scalar(0);
+
+	while (val_greater_than(t, zero)) {
+		bool sliding_x = is_sliding_x(position, size, velocity, bit);
+		bool sliding_y = is_sliding_y(position, size, velocity, bit);
+		GvmConstant (*to_boundary)(GvmConstant, GvmConstant, GvmConstant, GvmConstant *) = NULL;
+		GvmConstant (*no_collide)(GvmConstant, GvmConstant, GvmConstant) = NULL;
+
+		if (sliding_x && sliding_y) {
+			break;
+		} else if (sliding_x) {
+			to_boundary = slide_to_boundary_x;
+			no_collide = slide_no_collide_x;
+		} else if (sliding_y) {
+			to_boundary = slide_to_boundary_y;
+			no_collide = slide_no_collide_y;
+		} else {
+			to_boundary = move_to_boundary;
+			no_collide = move_no_collide;
+		}
+
+		GvmConstant next_boundary;
+		GvmConstant toi = to_boundary(position, size, velocity, &next_boundary);
+		if (val_greater_than(toi, t)) {
+			position = no_collide(position, velocity, t);
+		} else {
+			position = next_boundary;
+		}
+		t = subtract_vals(t, toi);
+	}
+
+	return position;
+}
+
 static GvmConstant peek()
 {
 	if (vm.stack_count <= 0) {
@@ -129,6 +372,7 @@ static bool update()
 				modify(val_vec2_make(x, y));
 				break;
 			case OP_NORMALIZE:
+				// TODO: runtime_error on zero
 				modify(val_vec2_normalize(peek()));
 				break;
 			case OP_JUMP_IF_FALSE: {
@@ -149,14 +393,14 @@ static bool update()
 			case OP_LESS_THAN: {
 				GvmConstant b = pop();
 				GvmConstant a = peek();
-				GvmConstant result = val_less_than(a, b);
+				GvmConstant result = int_to_scalar(val_less_than(a, b));
 				modify(result);
 				break;
 			}
 			case OP_GREATER_THAN: {
 				GvmConstant b = pop();
 				GvmConstant a = peek();
-				GvmConstant result = val_greater_than(a, b);
+				GvmConstant result = int_to_scalar(val_greater_than(a, b));
 				modify(result);
 				break;
 			}
@@ -209,17 +453,16 @@ static bool update()
 			case OP_MAP_FLAG: {
 				uint8_t bit = 1u << BYTE();
 				GvmConstant where = pop();
-				int x = vec2_get_x(where);
-				int y = vec2_get_y(where);
-				if (x < 0 || vm.map_width * SPRITE_SZ <= x || y < 0 || vm.map_height * SPRITE_SZ <= y) {
-					push(double_to_scalar(0));
-				} else {
-					int map_x = x / SPRITE_SZ;
-					int map_y = y / SPRITE_SZ;
-					uint16_t sprite = vm.map[map_x + vm.map_width * map_y];
-					uint8_t flags = vm.sprite_flags[sprite];
-					push(double_to_scalar((flags & bit) ? 1 : 0));
-				}
+				uint8_t flags = get_map_flags(where);
+				push(int_to_scalar((bit & flags) ? 1 : 0));
+				break;
+			}
+			case OP_MOVE_COLLIDE: {
+				GvmConstant velocity = pop();
+				GvmConstant size = pop();
+				GvmConstant position = peek();
+				uint8_t bit = 1u << BYTE();
+				modify(move_collide(position, size, velocity, bit));
 				break;
 			}
 			case OP_FILL_RECT: {

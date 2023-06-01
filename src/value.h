@@ -21,8 +21,14 @@ typedef struct {
 GvmConstant add_vals(GvmConstant a, GvmConstant b);
 GvmConstant subtract_vals(GvmConstant a, GvmConstant b);
 GvmConstant multiply_vals(GvmConstant a, GvmConstant b);
-GvmConstant val_less_than(GvmConstant a, GvmConstant b);
-GvmConstant val_greater_than(GvmConstant a, GvmConstant b);
+GvmConstant divide_vals(GvmConstant a, GvmConstant b);
+GvmConstant floor_val(GvmConstant from, GvmConstant snap);
+GvmConstant ceil_val(GvmConstant from, GvmConstant snap);
+GvmConstant floor_val_ex(GvmConstant from, GvmConstant snap);
+GvmConstant ceil_val_ex(GvmConstant from, GvmConstant snap);
+bool val_less_than(GvmConstant a, GvmConstant b);
+bool val_greater_than(GvmConstant a, GvmConstant b);
+bool val_equal(GvmConstant a, GvmConstant b);
 GvmConstant val_modulus(GvmConstant a, GvmConstant b);
 GvmConstant val_vec2_get_x(GvmConstant v);
 GvmConstant val_vec2_get_y(GvmConstant v);
@@ -44,5 +50,6 @@ GvmConstant scan_scalar(const char *str);
 GvmConstant scan_vec2(const char *str_x, const char *str_y);
 GvmConstant double_to_scalar(double x);
 GvmConstant double_to_vec2(double x, double y);
+GvmConstant int_to_scalar(int x);
 
 #endif // VALUE_H

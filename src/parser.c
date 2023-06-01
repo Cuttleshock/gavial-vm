@@ -341,6 +341,17 @@ static void hook_MAP_FLAG(CcmList lists[])
 	instruction(bit);
 }
 
+static void hook_MOVE_COLLIDE(CcmList lists[])
+{
+	uint8_t bit = lists[0].values[0].as.number;
+	expect(VAL_VEC2);
+	expect(VAL_VEC2);
+	expect(VAL_VEC2);
+	push(VAL_VEC2);
+	instruction(OP_MOVE_COLLIDE);
+	instruction(bit);
+}
+
 // TODO: Argument checking
 static void hook_FILL_RECT(CcmList lists[])
 {
@@ -444,6 +455,7 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(MAP_WIDTH, 0);
 	TRY(MAP_HEIGHT, 0);
 	TRY(MAP_FLAG, 1);
+	TRY(MOVE_COLLIDE, 1);
 	TRY(FILL_RECT, 2);
 	TRY(SPRITE, 5);
 	TRY(DUP, 0);

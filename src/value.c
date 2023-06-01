@@ -42,6 +42,11 @@ static FixedPoint double_to_fixed(double d)
 	return d * FP_DEN;
 }
 
+static FixedPoint int_to_fixed(int x)
+{
+	return x * FP_DEN;
+}
+
 static FixedPoint fixed_add(FixedPoint a, FixedPoint b)
 {
 	FixedPoint res = a + b;
@@ -139,18 +144,69 @@ GvmConstant multiply_vals(GvmConstant a, GvmConstant b)
 	return scalar(0); // Unreachable
 }
 
-// Compares two values, treating them as scalars
-// Returns scalar 0 or 1
-GvmConstant val_less_than(GvmConstant a, GvmConstant b)
+// Divides two values - for vec2, element-wise
+GvmConstant divide_vals(GvmConstant a, GvmConstant b)
 {
-	return scalar(SCX(a) < SCX(b) ? 1 : 0);
+	switch (a.type) {
+		case VAL_SCALAR:
+			return scalar(fixed_divide(SCX(a), SCX(b)));
+		case VAL_VEC2:
+			return vec2(fixed_divide(V2X(a), V2X(b)), fixed_divide(V2Y(a), V2Y(b)));
+	}
+
+	return scalar(0); // Unreachable
+}
+
+static FixedPoint floor_raw(FixedPoint from, FixedPoint snap)
+{
+	// TODO: Careful, we're cheating here by treating FixedPoints directly
+	FixedPoint ret = snap * (from / snap);
+	if (from < 0) {
+		ret -= snap;
+	}
+	return ret;
+}
+
+// Arguments: scalar 'from', scalar integer 'snap'
+// Returns: nearest exact multiple of snap below from, inclusive
+GvmConstant floor_val(GvmConstant from, GvmConstant snap)
+{
+	return scalar(floor_raw(SCX(from), SCX(snap)));
+}
+
+GvmConstant ceil_val(GvmConstant from, GvmConstant snap)
+{
+	return scalar(floor_raw(SCX(from) + SCX(snap) - 1, SCX(snap)));
+}
+
+// Exclusive-range versions of floor and ceil
+// e.g. ceil_val(47, 12) == 48, ceil_val_ex(47, 12) == 48,
+//      ceil_val(48, 12) == 48, ceil_val_ex(48, 12) == 60
+GvmConstant floor_val_ex(GvmConstant from, GvmConstant snap)
+{
+	return scalar(floor_raw(SCX(from) - 1, SCX(snap)));
+}
+
+GvmConstant ceil_val_ex(GvmConstant from, GvmConstant snap)
+{
+	return scalar(floor_raw(SCX(from) + SCX(snap), SCX(snap)));
 }
 
 // Compares two values, treating them as scalars
-// Returns scalar 0 or 1
-GvmConstant val_greater_than(GvmConstant a, GvmConstant b)
+// To use as GvmConstant, call int_to_scalar()
+bool val_less_than(GvmConstant a, GvmConstant b)
 {
-	return scalar(SCX(a) > SCX(b) ? 1 : 0);
+	return SCX(a) < SCX(b);
+}
+
+bool val_greater_than(GvmConstant a, GvmConstant b)
+{
+	return SCX(a) > SCX(b);
+}
+
+bool val_equal(GvmConstant a, GvmConstant b)
+{
+	return SCX(a) == SCX(b);
 }
 
 // Treating a and b as scalars, takes their modulus
@@ -262,15 +318,20 @@ void print_value(GvmConstant val)
 	}
 }
 
-// Returns the integer part of v.x (truncating towards zero)
+static int fixed_to_int(FixedPoint fx)
+{
+	return floor_raw(fx, FP_DEN) / FP_DEN;
+}
+
+// Returns the integer part of v.x, rounding towards minus infinity
 int vec2_get_x(GvmConstant v)
 {
-	return V2X(v) / FP_DEN;
+	return fixed_to_int(V2X(v));
 }
 
 int vec2_get_y(GvmConstant v)
 {
-	return V2Y(v) / FP_DEN;
+	return fixed_to_int(V2Y(v));
 }
 
 static FixedPoint scan_fixed(const char *str)
@@ -313,4 +374,9 @@ GvmConstant double_to_scalar(double x)
 GvmConstant double_to_vec2(double x, double y)
 {
 	return vec2(double_to_fixed(x), double_to_fixed(y));
+}
+
+GvmConstant int_to_scalar(int x)
+{
+	return scalar(int_to_fixed(x));
 }

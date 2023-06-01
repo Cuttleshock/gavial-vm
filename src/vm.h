@@ -37,6 +37,7 @@ typedef enum {
 	OP_MAP_WIDTH,
 	OP_MAP_HEIGHT,
 	OP_MAP_FLAG,
+	OP_MOVE_COLLIDE,
 	OP_FILL_RECT,
 	OP_SPRITE,
 	// Stack manipulation
