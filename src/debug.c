@@ -35,6 +35,8 @@ static int disassemble_instruction(int i)
 		CASE(OP_SUBTRACT);
 		CASE(OP_MULTIPLY);
 		CASE(OP_MODULO);
+		CASE(OP_RAND);
+		CASE(OP_RAND_INT);
 		CASE(OP_GET_X);
 		CASE(OP_GET_Y);
 		CASE(OP_MAKE_VEC2);

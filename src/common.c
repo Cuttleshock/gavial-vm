@@ -37,3 +37,14 @@ void gvm_assert(bool assertion, const char *format, ...)
 		exit(EXIT_FAILURE);
 	}
 }
+
+// TODO: Better RNG
+void random_seed(long seed)
+{
+	srand48(seed);
+}
+
+long random()
+{
+	return lrand48();
+}

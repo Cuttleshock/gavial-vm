@@ -194,6 +194,19 @@ static void hook_MULTIPLY(CcmList *)
 	instruction(OP_MULTIPLY);
 }
 
+static void hook_RAND(CcmList *)
+{
+	push(VAL_SCALAR);
+	instruction(OP_RAND);
+}
+
+static void hook_RAND_INT(CcmList *lists)
+{
+	expect(VAL_SCALAR);
+	push(VAL_SCALAR);
+	instruction(OP_RAND_INT);
+}
+
 static void hook_LESS_THAN(CcmList *)
 {
 	expect(VAL_SCALAR);
@@ -437,6 +450,8 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(SUBTRACT, 0);
 	TRY(MULTIPLY, 0);
 	TRY(MODULO, 0);
+	TRY(RAND, 0);
+	TRY(RAND_INT, 0);
 	TRY(LESS_THAN, 0);
 	TRY(GREATER_THAN, 0);
 	TRY(NOT, 0);

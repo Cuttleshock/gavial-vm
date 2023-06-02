@@ -83,6 +83,14 @@ INIT UPDATE
 				`enemy_position #SPRITE(6, 2, 2, false, false),
 				`enemy_position #SPRITE(5, 2, 2, false, false))))
 
+	IF_ENEMY_HIT(MAKE_VEC2(RAND_RANGE(36, 168), RAND_RANGE(36, 168)) #SET(`enemy_position))
+
+:IF_ENEMY_HIT(?do)
+	IF(<(100 #RAND_INT, 2), ?do) ; TODO: actual condition
+
+:RAND_RANGE(?min, ?max)
+	+(_(?max, ?min) #RAND_INT, ?min)
+
 :ATTACK()
 	IF(<=(`attack_timer, 0),
 		ATTACK_DURATION #SET(`attack_timer))

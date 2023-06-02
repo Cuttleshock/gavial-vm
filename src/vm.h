@@ -15,6 +15,8 @@ typedef enum {
 	OP_SUBTRACT,
 	OP_MULTIPLY,
 	OP_MODULO,
+	OP_RAND,
+	OP_RAND_INT,
 	// Vectors
 	OP_GET_X,
 	OP_GET_Y,
@@ -48,7 +50,7 @@ typedef enum {
 	OP_RETURN,
 } OpCode;
 
-bool init_vm();
+bool init_vm(bool reseed);
 bool queue_load(const char *path);
 void queue_save();
 void queue_reload();

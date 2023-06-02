@@ -157,6 +157,24 @@ GvmConstant divide_vals(GvmConstant a, GvmConstant b)
 	return scalar(0); // Unreachable
 }
 
+// Returns: random scalar in [0, 1)
+GvmConstant rand_val()
+{
+	return scalar(random() % FP_DEN);
+}
+
+// Returns: random int in [0, max)
+GvmConstant rand_int_val(GvmConstant max)
+{
+	int max_int = SCX(max) / FP_DEN;
+	if (max_int <= 1) {
+		// TODO: Should we call random() here for the side-effect of advancing RNG?
+		return scalar(0);
+	} else {
+		return scalar(random() % max_int * FP_DEN);
+	}
+}
+
 static FixedPoint floor_raw(FixedPoint from, FixedPoint snap)
 {
 	// TODO: Careful, we're cheating here by treating FixedPoints directly
