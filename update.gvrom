@@ -27,6 +27,7 @@ INIT UPDATE
 	#DEFINE_VEC2(`enemy_position, 150, 150)
 	#DEFINE_SCALAR(`enemy_facing, BUTTON_DOWN)
 	#DEFINE_SCALAR(`attack_timer, 0)
+	#DEFINE_SCALAR(`rng, 2357)
 
 :UPDATE()
 	ADD(`time, 1)
@@ -75,27 +76,31 @@ INIT UPDATE
 				IFATTACK(+(`player_position, V2(0, 12)) #SPRITE(0, 2, 1, false, true))
 				`player_position #SPRITE(2, 2, 1, false, false))))
 
-	IFELSE(==(`enemy_facing, BUTTON_RIGHT),
-		`enemy_position #SPRITE(4, 2, 2, false, false),
-		IFELSE(==(`enemy_facing, BUTTON_LEFT),
-			`enemy_position #SPRITE(4, 2, 2, true, false),
-			IFELSE(==(`enemy_facing, BUTTON_UP),
-				`enemy_position #SPRITE(6, 2, 2, false, false),
-				`enemy_position #SPRITE(5, 2, 2, false, false))))
+	RECT(`enemy_position, V2(ENEMY_W, ENEMY_H))(3, 2)
 
 	IF_ENEMY_HIT(MAKE_VEC2(RAND_RANGE(36, 168), RAND_RANGE(36, 168)) #SET(`enemy_position))
 
 :IF_ENEMY_HIT(?do)
-	IF(<(100 #RAND_INT, 2), ?do) ; TODO: actual condition
+	IF(
+		AND(AND(AND(
+			>(+(X(`player_position), 10), X(`enemy_position)),
+			<(+(X(`player_position), 2), +(X(`enemy_position), ENEMY_W))),
+			>(+(Y(`player_position), 12), Y(`enemy_position))),
+			<(Y(`player_position), +(Y(`enemy_position), ENEMY_H))),
+		?do)
 
 :RAND_RANGE(?min, ?max)
-	+(_(?max, ?min) #RAND_INT, ?min)
+	+(_(?max, ?min) #RAND_INT(`rng), ?min)
 
 :ATTACK()
 	IF(<=(`attack_timer, 0),
 		ATTACK_DURATION #SET(`attack_timer))
 
 :IFATTACK(?do) IF(>(`attack_timer, 0), ?do)
+
+:ENEMY_SIZE() 10
+:ENEMY_W() ENEMY_SIZE
+:ENEMY_H() ENEMY_SIZE
 
 :ATTACK_DURATION() 30
 :PLAYER_SPEED() V2(1, 1)
@@ -107,6 +112,8 @@ INIT UPDATE
 :CLAMP(?val, ?min, ?max) IF(IF(?val #DUP ?min #LESS_THAN, #POP ?min) #DUP ?max #GREATER_THAN, #POP ?max)
 :V2() #VEC2
 :MAKE_VEC2(?x, ?y) ?x ?y #MAKE_VEC2
+:X(?vec) ?vec #GET_X
+:Y(?vec) ?vec #GET_Y
 :+(?a, ?b) ?a ?b #ADD
 :_(?a, ?b) ?a ?b #SUBTRACT ; '-' reserved :(
 :*(?a, ?b) ?a ?b #MULTIPLY

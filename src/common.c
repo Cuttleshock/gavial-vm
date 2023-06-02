@@ -39,12 +39,8 @@ void gvm_assert(bool assertion, const char *format, ...)
 }
 
 // TODO: Better RNG
-void random_seed(long seed)
+long gvm_rand(long seed)
 {
 	srand48(seed);
-}
-
-long random()
-{
 	return lrand48();
 }

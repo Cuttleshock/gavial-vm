@@ -12,7 +12,6 @@
 #include "vm_internals.h"
 
 #define INSTRUCTIONS_INITIAL_SIZE 256
-#define VM_RANDOM_SEED 2357
 
 struct VM vm;
 char *queued_load_path = NULL;
@@ -361,12 +360,19 @@ static bool update()
 				modify(val_modulus(a, b));
 				break;
 			}
-			case OP_RAND:
-				push(rand_val());
+			case OP_RAND: {
+				uint8_t index = BYTE();
+				GvmConstant *seed = &vm.state[index].value;
+				push(rand_val(seed));
 				break;
-			case OP_RAND_INT:
-				modify(rand_int_val(peek()));
+			}
+			case OP_RAND_INT: {
+				uint8_t index = BYTE();
+				GvmConstant *seed = &vm.state[index].value;
+				GvmConstant max = peek();
+				modify(rand_int_val(max, seed));
 				break;
+			}
 			case OP_GET_X:
 				modify(val_vec2_get_x(peek()));
 				break;
@@ -526,9 +532,7 @@ static bool update()
 #undef BYTE
 }
 
-// Cleans VM, with flag determining whether to reseed RNG
-// Returns: success
-bool init_vm(bool reseed)
+bool init_vm()
 {
 	vm.state_count = 0;
 	vm.stack_count = 0;
@@ -544,9 +548,6 @@ bool init_vm(bool reseed)
 	vm.count = 0;
 
 	if (vm.instructions != NULL) {
-		if (reseed) {
-			random_seed(VM_RANDOM_SEED);
-		}
 		return true;
 	} else {
 		return false;
@@ -805,7 +806,7 @@ bool run_vm(const char *rom_path)
 		if (will_reload) {
 			will_reload = false;
 			struct VM old_vm = vm;
-			init_vm(true);
+			init_vm();
 			if (!load_rom(rom_path)) {
 				gvm_error("Error reloading ROM %s\n", rom_path);
 				close_vm();
@@ -829,7 +830,7 @@ bool run_vm(const char *rom_path)
 				gvm_log("ROM %s modified: reparsing\n", rom_path);
 				rom_timestamp = new_timestamp;
 				struct VM old_vm = vm;
-				init_vm(false);
+				init_vm();
 				if (!load_rom(rom_path)) {
 					gvm_error("Error parsing updated ROM %s\n", rom_path);
 					close_vm();

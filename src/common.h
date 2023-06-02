@@ -23,7 +23,6 @@ void gvm_log(const char *format, ...);
 void gvm_error(const char *format, ...);
 void gvm_assert(bool assertion, const char *format, ...);
 
-void random_seed(long seed);
-long random();
+long gvm_rand(long seed);
 
 #endif // COMMON_H

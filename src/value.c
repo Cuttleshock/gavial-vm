@@ -157,21 +157,32 @@ GvmConstant divide_vals(GvmConstant a, GvmConstant b)
 	return scalar(0); // Unreachable
 }
 
-// Returns: random scalar in [0, 1)
-GvmConstant rand_val()
+static FixedPoint call_rng(GvmConstant *seed)
 {
-	return scalar(random() % FP_DEN);
+	FixedPoint seed_fp = SCX(*seed);
+	long roll = gvm_rand(seed_fp);
+	*seed = scalar(roll);
+	return roll;
 }
 
-// Returns: random int in [0, max)
-GvmConstant rand_int_val(GvmConstant max)
+// Returns: random scalar in [0, 1), using seed
+// Sets seed to the raw RNG roll
+GvmConstant rand_val(GvmConstant *seed)
 {
-	int max_int = SCX(max) / FP_DEN;
+	FixedPoint roll = call_rng(seed);
+	return scalar(roll % FP_DEN);
+}
+
+// Returns: random int in [0, max), using seed
+// Sets seed to the raw RNG roll
+GvmConstant rand_int_val(GvmConstant max, GvmConstant *seed)
+{
+	FixedPoint roll = call_rng(seed);
+	FixedPoint max_int = SCX(max) / FP_DEN;
 	if (max_int <= 1) {
-		// TODO: Should we call random() here for the side-effect of advancing RNG?
 		return scalar(0);
 	} else {
-		return scalar(random() % max_int * FP_DEN);
+		return scalar(roll % max_int * FP_DEN);
 	}
 }
 

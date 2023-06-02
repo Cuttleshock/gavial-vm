@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	if (!init_vm(true)) {
+	if (!init_vm()) {
 		close_subsystems();
 		return EXIT_FAILURE;
 	}

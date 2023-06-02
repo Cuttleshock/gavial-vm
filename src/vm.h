@@ -50,7 +50,7 @@ typedef enum {
 	OP_RETURN,
 } OpCode;
 
-bool init_vm(bool reseed);
+bool init_vm();
 bool queue_load(const char *path);
 void queue_save();
 void queue_reload();

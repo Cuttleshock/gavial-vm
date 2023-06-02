@@ -194,17 +194,27 @@ static void hook_MULTIPLY(CcmList *)
 	instruction(OP_MULTIPLY);
 }
 
-static void hook_RAND(CcmList *)
+static void hook_RAND(CcmList lists[])
 {
-	push(VAL_SCALAR);
-	instruction(OP_RAND);
+	const char *name = lists[0].values[0].as.str.chars;
+	int length = lists[0].values[0].as.str.length;
+	if (state_instruction(OP_RAND, name, length)) {
+		push(VAL_SCALAR);
+	} else {
+		ccm_runtime_error("Invalid variable name");
+	}
 }
 
-static void hook_RAND_INT(CcmList *lists)
+static void hook_RAND_INT(CcmList lists[])
 {
-	expect(VAL_SCALAR);
-	push(VAL_SCALAR);
-	instruction(OP_RAND_INT);
+	const char *name = lists[0].values[0].as.str.chars;
+	int length = lists[0].values[0].as.str.length;
+	if (state_instruction(OP_RAND_INT, name, length)) {
+		expect(VAL_SCALAR);
+		push(VAL_SCALAR);
+	} else {
+		ccm_runtime_error("Invalid variable name");
+	}
 }
 
 static void hook_LESS_THAN(CcmList *)
@@ -450,8 +460,8 @@ static bool parse_update_impl(const char *src, int src_length, const char *prede
 	TRY(SUBTRACT, 0);
 	TRY(MULTIPLY, 0);
 	TRY(MODULO, 0);
-	TRY(RAND, 0);
-	TRY(RAND_INT, 0);
+	TRY(RAND, 1);
+	TRY(RAND_INT, 1);
 	TRY(LESS_THAN, 0);
 	TRY(GREATER_THAN, 0);
 	TRY(NOT, 0);
